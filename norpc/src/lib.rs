@@ -3,7 +3,7 @@ use tokio::sync::oneshot;
 use tower_service::Service;
 
 pub mod build;
-pub mod compiler;
+mod compiler;
 
 pub use async_trait::async_trait;
 
@@ -50,9 +50,7 @@ pub struct Request<X, Y> {
     inner: X,
     tx: oneshot::Sender<Y>,
 }
-// #[pin_project::pin_project]
 pub struct Server<Req, Svc: Service<Req>> {
-    // #[pin]
     service: Svc,
     rx: mpsc::Receiver<Request<Req, Svc::Response>>,
 }

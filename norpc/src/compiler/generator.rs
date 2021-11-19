@@ -1,7 +1,5 @@
 use super::Service;
 
-use super::*;
-
 fn generate_request(svc: &Service) -> String {
     let mut list = vec![];
     for fun in &svc.functions {

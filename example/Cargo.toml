@@ -9,10 +9,6 @@ edition = "2021"
 tokio = { version = "*", features = ["full"] }
 tower-service = "*"
 tower = { version = "*", features = ["full"] }
-async-trait = "*"
-futures = "*"
-anyhow = "*"
-thiserror = "*"
 
 norpc = { path = "../norpc" }
 

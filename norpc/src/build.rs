@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::path::{Path, PathBuf};
 
-pub struct Compiler {}
+pub struct Compiler;
 impl Compiler {
     pub fn default() -> Self {
         Self {}

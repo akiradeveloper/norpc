@@ -1,7 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tokio::sync::mpsc;
-use tokio::sync::oneshot;
 use tokio::sync::RwLock;
 use tower_service::Service;
 
@@ -18,7 +17,7 @@ impl HelloWorldApp {
         }
     }
 }
-#[async_trait::async_trait]
+#[norpc::async_trait]
 impl HelloWorld for HelloWorldApp {
     type Error = ();
     async fn read(&self, id: u64) -> Result<Option<String>, Self::Error> {
