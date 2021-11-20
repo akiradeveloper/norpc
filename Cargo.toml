@@ -1,5 +1,5 @@
 [workspace]
 members = [
 	"norpc",
-	"example",
+	"example/hello_world",
 ]

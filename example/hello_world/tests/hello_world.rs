@@ -37,8 +37,8 @@ impl HelloWorld for HelloWorldApp {
         Ok(())
     }
 }
-#[tokio::main]
-async fn main() {
+#[tokio::test]
+async fn test_hello_world() {
     let (tx, rx) = mpsc::channel(10);
     tokio::spawn(async move {
         let app = HelloWorldApp::new();
@@ -55,6 +55,8 @@ async fn main() {
 
     cli.write(1, "one".to_owned()).await.unwrap();
     assert_eq!(cli.read(1).await.unwrap(), Some("one".to_owned()));
+    assert_eq!(cli.read(2).await.unwrap(), None);
+    assert_eq!(cli.read(3).await.unwrap(), None);
 
     let mut h = HashSet::new();
     h.insert((2, "two".to_owned()));

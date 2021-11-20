@@ -10,7 +10,7 @@ tokio = { version = "*", features = ["full"] }
 tower-service = "*"
 tower = { version = "*", features = ["full"] }
 
-norpc = { path = "../norpc" }
+norpc = { path = "../../norpc" }
 
 [build-dependencies]
-norpc = { path = "../norpc" }
+norpc = { path = "../../norpc" }
