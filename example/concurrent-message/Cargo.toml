@@ -1,5 +1,5 @@
 [package]
-name = "hello_world"
+name = "concurrent-message"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 tokio = { version = "*", features = ["full"] }
 tower = { version = "*", features = ["full"] }
+futures = "*"
 
 norpc = { path = "../../norpc" }
 

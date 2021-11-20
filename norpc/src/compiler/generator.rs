@@ -110,7 +110,6 @@ fn generate_client_impl(svc: &Service) -> String {
         );
         funlist.push(f);
     }
-
     format!(
         "
 	impl<Svc: Service<{}Request, Response = {}Response>> {}Client<Svc> {{

@@ -39,10 +39,11 @@ impl<X, Y> Clone for ClientChannel<X, Y> {
         }
     }
 }
-impl<X: 'static, Y: 'static> Service<X> for ClientChannel<X, Y> {
+impl<X: 'static + Send, Y: 'static + Send> Service<X> for ClientChannel<X, Y> {
     type Response = Y;
     type Error = anyhow::Error;
-    type Future = std::pin::Pin<Box<dyn std::future::Future<Output = Result<Y, Self::Error>>>>;
+    type Future =
+        std::pin::Pin<Box<dyn std::future::Future<Output = Result<Y, Self::Error>> + Send>>;
 
     fn poll_ready(
         &mut self,
