@@ -110,6 +110,7 @@ fn generate_client_impl(svc: &Service) -> String {
         );
         funlist.push(f);
     }
+    // let alias pub type {}ClientT = {}Client<ClientChannel<{}Request
 
     format!(
         "
