@@ -37,7 +37,7 @@ impl HelloWorld for HelloWorldApp {
         Ok(())
     }
 }
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_hello_world() {
     let (tx, rx) = mpsc::unbounded_channel();
     tokio::spawn(async move {
