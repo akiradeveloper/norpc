@@ -115,7 +115,7 @@ mod tests {
         };
     }
     #[test]
-    fn test_typename2() {
+    fn test_typename() {
         tt!(parse_typename, "u64");
         tt!(parse_typename, "HashSet<u64>");
         tt!(parse_typename, "()");

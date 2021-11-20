@@ -49,8 +49,8 @@ fn generate_server_struct(svc: &Service) -> String {
     format!(
         "
 	#[derive(Clone)]
-	pub struct {}Service<H: {}> {{
-		app: H
+	pub struct {}Service<App: {}> {{
+		app: App
 	}}
 	",
         svc.name, svc.name
@@ -151,11 +151,11 @@ fn generate_server_impl(svc: &Service) -> String {
 
     format!(
         "
-	impl<H: {}> {}Service<H> {{
-		pub fn new(app: H) -> Self {{
+	impl<App: {}> {}Service<App> {{
+		pub fn new(app: App) -> Self {{
 			Self {{ app }}
 		}}
-		pub async fn call(self, req: {}Request) -> Result<{}Response, H::Error> {{
+		pub async fn call(self, req: {}Request) -> Result<{}Response, App::Error> {{
 			let app = self.app.clone();
 			match req {{
 				{}
