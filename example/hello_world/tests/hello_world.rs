@@ -44,10 +44,10 @@ async fn test_hello_world() {
         let app = HelloWorldApp::new();
         let service = HelloWorldService::new(app);
         let service = tower::service_fn(move |x| service.clone().call(x));
-        let server = norpc::Server::new(rx, service);
+        let server = norpc::ServerChannel::new(rx, service);
         server.serve().await
     });
-    let chan = norpc::Channel::new(tx);
+    let chan = norpc::ClientChannel::new(tx);
     let chan = tower::service_fn(move |x| chan.clone().call(x));
     let cli = HelloWorldClient::new(chan);
 

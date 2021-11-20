@@ -24,10 +24,10 @@ pub enum Error<AppError> {
 }
 
 /// MPSC channel wrapper on the client-side.
-pub struct Channel<X, Y> {
+pub struct ClientChannel<X, Y> {
     tx: mpsc::Sender<Request<X, Y>>,
 }
-impl<X, Y> Channel<X, Y> {
+impl<X, Y> ClientChannel<X, Y> {
     pub fn new(tx: mpsc::Sender<Request<X, Y>>) -> Self {
         Self { tx }
     }
@@ -42,7 +42,7 @@ impl<X, Y> Channel<X, Y> {
         Ok(rep)
     }
 }
-impl<X, Y> Clone for Channel<X, Y> {
+impl<X, Y> Clone for ClientChannel<X, Y> {
     fn clone(&self) -> Self {
         Self {
             tx: self.tx.clone(),
@@ -58,11 +58,11 @@ pub struct Request<X, Y> {
 }
 
 /// MPSC channel wrapper on the server-side.
-pub struct Server<Req, Svc: Service<Req>> {
+pub struct ServerChannel<Req, Svc: Service<Req>> {
     service: Svc,
     rx: mpsc::Receiver<Request<Req, Svc::Response>>,
 }
-impl<Req, Svc: Service<Req> + 'static + Send + Clone> Server<Req, Svc>
+impl<Req, Svc: Service<Req> + 'static + Send + Clone> ServerChannel<Req, Svc>
 where
     Req: 'static + Send,
     Svc::Future: Send,
