@@ -59,7 +59,7 @@ fn generate_server_struct(svc: &Service) -> String {
 fn generate_trait(svc: &Service) -> String {
     let mut list = vec![];
     for fun in &svc.functions {
-        let mut params = vec!["&self".to_owned()];
+        let mut params = vec!["self".to_owned()];
         for param in &fun.inputs {
             params.push(format!("{}:{}", param.var_name, param.typ_name));
         }

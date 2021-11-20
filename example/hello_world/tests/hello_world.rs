@@ -20,20 +20,20 @@ impl HelloWorldApp {
 #[norpc::async_trait]
 impl HelloWorld for HelloWorldApp {
     type Error = ();
-    async fn read(&self, id: u64) -> Result<Option<String>, Self::Error> {
+    async fn read(self, id: u64) -> Result<Option<String>, Self::Error> {
         Ok(self.state.read().await.get(&id).cloned())
     }
-    async fn write(&self, id: u64, v: String) -> Result<(), Self::Error> {
+    async fn write(self, id: u64, v: String) -> Result<(), Self::Error> {
         self.state.write().await.insert(id, v);
         Ok(())
     }
-    async fn write_many(&self, kv: HashSet<(u64, String)>) -> Result<(), Self::Error> {
+    async fn write_many(self, kv: HashSet<(u64, String)>) -> Result<(), Self::Error> {
         for (k, v) in kv {
             self.state.write().await.insert(k, v);
         }
         Ok(())
     }
-    async fn noop(&self) -> Result<(), Self::Error> {
+    async fn noop(self) -> Result<(), Self::Error> {
         Ok(())
     }
 }
