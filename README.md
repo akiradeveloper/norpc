@@ -1,5 +1,11 @@
 # norpc
 
+[![Crates.io](https://img.shields.io/crates/v/norpc.svg)](https://crates.io/crates/norpc)
+[![documentation](https://docs.rs/norpc/badge.svg)](https://docs.rs/norpc)
+![CI](https://github.com/akiradeveloper/norpc/workflows/CI/badge.svg)
+[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/akiradeveloper/norpc/blob/master/LICENSE)
+[![Tokei](https://tokei.rs/b1/github/akiradeveloper/norpc)](https://github.com/akiradeveloper/norpc)
+
 ## Motivation
 
 Developing an async application is often very difficult task but
