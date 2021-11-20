@@ -50,7 +50,7 @@ impl<X, Y> Clone for ClientChannel<X, Y> {
     }
 }
 
-/// Pair of user defined request and 
+/// Pair of user defined request and
 /// a oneshot sender for the response.
 pub struct Request<X, Y> {
     inner: X,
@@ -76,7 +76,7 @@ where
             let mut cln = self.service.clone();
             tokio::spawn(async move {
                 if let Ok(rep) = cln.call(inner).await {
-                    tx.send(rep);
+                    tx.send(rep).ok();
                 }
             });
         }

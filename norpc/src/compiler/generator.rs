@@ -10,7 +10,9 @@ fn generate_request(svc: &Service) -> String {
         list.push(format!("{}({})", fun.name, itertools::join(params, ",")));
     }
     format!(
-        "pub enum {}Request {{
+        "
+        #[allow(non_camel_case_types)]
+        pub enum {}Request {{
 		{}
 	}}",
         svc.name,
@@ -23,7 +25,9 @@ fn generate_response(svc: &Service) -> String {
         list.push(format!("{}({})", fun.name, fun.output));
     }
     format!(
-        "pub enum {}Response {{
+        "
+        #[allow(non_camel_case_types)]
+        pub enum {}Response {{
 		{}
 	}}",
         svc.name,

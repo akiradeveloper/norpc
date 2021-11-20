@@ -16,12 +16,6 @@ use nom::multi::{many1, separated_list0, separated_list1};
 use nom::sequence::{delimited, pair, preceded, separated_pair, terminated, tuple};
 use nom::IResult;
 
-macro_rules! tt {
-    ($p: ident, $s: expr) => {
-        assert!(all_consuming($p)($s).is_ok())
-    };
-}
-
 fn parse_typeident(s: &str) -> IResult<&str, String> {
     let ident = is_a("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_");
     map(ident, |x: &str| x.to_owned())(s)
@@ -69,24 +63,12 @@ fn parse_typename(s: &str) -> IResult<&str, String> {
     });
     alt((array, tuple, composite, parse_typeident))(s)
 }
-#[test]
-fn test_typename2() {
-    tt!(parse_typename, "u64");
-    tt!(parse_typename, "HashSet<u64>");
-    tt!(parse_typename, "()");
-    tt!(parse_typename, "HashSet<(u64,u64)>");
-    tt!(parse_typename, "HashSet<((),Vec<u8>)>");
-}
+
 fn parse_varname(s: &str) -> IResult<&str, String> {
     let p = is_a("abcdefghijklmnopqrstuvwxyz0123456789_");
     map(p, |x: &str| x.to_owned())(s)
 }
-#[test]
-fn test_varname() {
-    tt!(parse_varname, "x");
-    tt!(parse_varname, "x0");
-    tt!(parse_varname, "n_n");
-}
+
 fn parse_param(s: &str) -> IResult<&str, Parameter> {
     let p1 = parse_varname;
     let p2 = parse_typename;
@@ -96,12 +78,7 @@ fn parse_param(s: &str) -> IResult<&str, Parameter> {
         typ_name: y.to_owned(),
     })(s)
 }
-#[test]
-fn test_parse_param() {
-    tt!(parse_param, "x:u64");
-    tt!(parse_param, "n_n:u64");
-    tt!(parse_param, "x:HashSet<u64>");
-}
+
 fn parse_function(s: &str) -> IResult<&str, Function> {
     let p1 = preceded(tag("fn"), parse_varname);
     let p2 = delimited(tag("("), separated_list0(tag(","), parse_param), tag(")"));
@@ -114,28 +91,14 @@ fn parse_function(s: &str) -> IResult<&str, Function> {
         }
     })(s)
 }
-#[test]
-fn test_parse_function() {
-    tt!(parse_function, "fnadd(s:String)->i32;");
-    tt!(parse_function, "fnadd_one(s:String)->();");
-    tt!(parse_function, "fnadd(s:String)->HashSet<u64>;");
-    tt!(parse_function, "fnwrite(a:u64,b:u64)->u64;");
-    tt!(parse_function, "fnwrite(id:u64,s:String)->();");
-}
+
 fn parse_functions(s: &str) -> IResult<&str, Vec<Function>> {
     let p1 = tag("{");
     let p2 = many1(parse_function);
     let p3 = tag("}");
     delimited(p1, p2, p3)(s)
 }
-#[test]
-fn test_functions() {
-    tt!(parse_functions, "{fnadd(s:String)->i32;}");
-    tt!(
-        parse_functions,
-        "{fnadd(s:String)->i32;fnadd(s:String)->();}"
-    );
-}
+
 fn parse_service(s: &str) -> IResult<&str, Service> {
     let p1 = preceded(tag("service"), parse_typename);
     let p = pair(p1, parse_functions);
@@ -144,13 +107,60 @@ fn parse_service(s: &str) -> IResult<&str, Service> {
         functions,
     })(s)
 }
-#[test]
-fn test_service() {
-    tt!(
-        parse_service,
-        "serviceHello{fnread(id:u64)->Option<String>;fnwrite(id:u64,s:String)->();}"
-    );
-}
+
 pub(super) fn parse(s: &str) -> IResult<&str, Vec<Service>> {
     all_consuming(many1(parse_service))(s)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    macro_rules! tt {
+        ($p: ident, $s: expr) => {
+            assert!(all_consuming($p)($s).is_ok())
+        };
+    }
+    #[test]
+    fn test_typename2() {
+        tt!(parse_typename, "u64");
+        tt!(parse_typename, "HashSet<u64>");
+        tt!(parse_typename, "()");
+        tt!(parse_typename, "HashSet<(u64,u64)>");
+        tt!(parse_typename, "HashSet<((),Vec<u8>)>");
+    }
+    #[test]
+    fn test_varname() {
+        tt!(parse_varname, "x");
+        tt!(parse_varname, "x0");
+        tt!(parse_varname, "n_n");
+    }
+    #[test]
+    fn test_parse_param() {
+        tt!(parse_param, "x:u64");
+        tt!(parse_param, "n_n:u64");
+        tt!(parse_param, "x:HashSet<u64>");
+    }
+    #[test]
+    fn test_parse_function() {
+        tt!(parse_function, "fnadd(s:String)->i32;");
+        tt!(parse_function, "fnadd_one(s:String)->();");
+        tt!(parse_function, "fnadd(s:String)->HashSet<u64>;");
+        tt!(parse_function, "fnwrite(a:u64,b:u64)->u64;");
+        tt!(parse_function, "fnwrite(id:u64,s:String)->();");
+    }
+    #[test]
+    fn test_functions() {
+        tt!(parse_functions, "{fnadd(s:String)->i32;}");
+        tt!(
+            parse_functions,
+            "{fnadd(s:String)->i32;fnadd(s:String)->();}"
+        );
+    }
+    #[test]
+    fn test_service() {
+        tt!(
+            parse_service,
+            "serviceHello{fnread(id:u64)->Option<String>;fnwrite(id:u64,s:String)->();}"
+        );
+    }
 }
