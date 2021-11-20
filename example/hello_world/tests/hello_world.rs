@@ -39,7 +39,7 @@ impl HelloWorld for HelloWorldApp {
 }
 #[tokio::test]
 async fn test_hello_world() {
-    let (tx, rx) = mpsc::channel(10);
+    let (tx, rx) = mpsc::unbounded_channel();
     tokio::spawn(async move {
         let app = HelloWorldApp::new();
         let service = HelloWorldService::new(app);

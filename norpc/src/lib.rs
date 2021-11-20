@@ -25,10 +25,10 @@ pub enum Error<AppError> {
 
 /// MPSC channel wrapper on the client-side.
 pub struct ClientChannel<X, Y> {
-    tx: mpsc::Sender<Request<X, Y>>,
+    tx: mpsc::UnboundedSender<Request<X, Y>>,
 }
 impl<X, Y> ClientChannel<X, Y> {
-    pub fn new(tx: mpsc::Sender<Request<X, Y>>) -> Self {
+    pub fn new(tx: mpsc::UnboundedSender<Request<X, Y>>) -> Self {
         Self { tx }
     }
     pub async fn call(self, req: X) -> anyhow::Result<Y> {
@@ -37,9 +37,12 @@ impl<X, Y> ClientChannel<X, Y> {
             inner: req,
             tx: tx1,
         };
-        self.tx.try_send(req).ok();
-        let rep = rx1.await.unwrap();
-        Ok(rep)
+        if self.tx.send(req).is_ok() {
+            let rep = rx1.await?;
+            Ok(rep)
+        } else {
+            anyhow::bail!("failed to send a request")
+        }
     }
 }
 impl<X, Y> Clone for ClientChannel<X, Y> {
@@ -60,7 +63,7 @@ pub struct Request<X, Y> {
 /// MPSC channel wrapper on the server-side.
 pub struct ServerChannel<Req, Svc: Service<Req>> {
     service: Svc,
-    rx: mpsc::Receiver<Request<Req, Svc::Response>>,
+    rx: mpsc::UnboundedReceiver<Request<Req, Svc::Response>>,
 }
 impl<Req, Svc: Service<Req> + 'static + Send + Clone> ServerChannel<Req, Svc>
 where
@@ -68,7 +71,7 @@ where
     Svc::Future: Send,
     Svc::Response: Send,
 {
-    pub fn new(rx: mpsc::Receiver<Request<Req, Svc::Response>>, service: Svc) -> Self {
+    pub fn new(rx: mpsc::UnboundedReceiver<Request<Req, Svc::Response>>, service: Svc) -> Self {
         Self { service, rx }
     }
     pub async fn serve(mut self) {
