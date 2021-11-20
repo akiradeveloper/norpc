@@ -20,8 +20,6 @@ struct Parameter {
 pub(crate) fn compile(s: &str) -> String {
     let mut s = s.to_owned();
     s.retain(|c| !c.is_whitespace());
-    dbg!(&s);
     let services = parser::parse(&s).unwrap().1;
-    dbg!(&services);
     generator::generate(services)
 }

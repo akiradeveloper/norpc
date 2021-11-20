@@ -24,7 +24,7 @@ Also, tarpc doesn't use Tower's `Service` but define a similar abstraction calle
 - Cyan: Reusable components provided by norpc library
 - Yellow: Components from external libraries like Tokio and Tower
 
-**norpc** utilizes Tower ecosystem.
+**norpc utilizes Tower ecosystem.**
 The core of the Tower ecosystem is an abstraction called `Service` which is like a function from `Request` to `Response`.
 The ecosystem has many decorators to add new behavior to the existing `Service`.
 

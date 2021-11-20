@@ -10,11 +10,9 @@
 use super::*;
 
 use nom::branch::alt;
-use nom::bytes::complete::{is_a, tag, take_while1};
-use nom::character::complete::{alphanumeric1, char, one_of};
-use nom::character::{is_alphanumeric, is_digit};
+use nom::bytes::complete::{is_a, tag};
 use nom::combinator::{all_consuming, map};
-use nom::multi::{many0, many1, many_m_n, separated_list0, separated_list1};
+use nom::multi::{many1, separated_list0, separated_list1};
 use nom::sequence::{delimited, pair, preceded, separated_pair, terminated, tuple};
 use nom::IResult;
 
@@ -28,10 +26,10 @@ fn parse_typeident(s: &str) -> IResult<&str, String> {
     let ident = is_a("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_");
     map(ident, |x: &str| x.to_owned())(s)
 }
-fn parse_typename2(s: &str) -> IResult<&str, String> {
+fn parse_typename(s: &str) -> IResult<&str, String> {
     let array = delimited(
         tag("["),
-        separated_list1(tag(","), parse_typename2),
+        separated_list1(tag(","), parse_typename),
         tag("]"),
     );
     let array = map(array, |xs| {
@@ -43,7 +41,7 @@ fn parse_typename2(s: &str) -> IResult<&str, String> {
     });
     let tuple = delimited(
         tag("("),
-        separated_list0(tag(","), parse_typename2),
+        separated_list0(tag(","), parse_typename),
         tag(")"),
     );
     let tuple = map(tuple, |xs| {
@@ -57,7 +55,7 @@ fn parse_typename2(s: &str) -> IResult<&str, String> {
         parse_typeident,
         delimited(
             tag("<"),
-            separated_list1(tag(","), parse_typename2),
+            separated_list1(tag(","), parse_typename),
             tag(">"),
         ),
     );
@@ -73,23 +71,12 @@ fn parse_typename2(s: &str) -> IResult<&str, String> {
 }
 #[test]
 fn test_typename2() {
-    tt!(parse_typename2, "u64");
-    tt!(parse_typename2, "HashSet<u64>");
-    tt!(parse_typename2, "()");
-    tt!(parse_typename2, "HashSet<(u64,u64)>");
-    tt!(parse_typename2, "HashSet<((),Vec<u8>)>");
+    tt!(parse_typename, "u64");
+    tt!(parse_typename, "HashSet<u64>");
+    tt!(parse_typename, "()");
+    tt!(parse_typename, "HashSet<(u64,u64)>");
+    tt!(parse_typename, "HashSet<((),Vec<u8>)>");
 }
-// fn parse_typename(s: &str) -> IResult<&str, String> {
-//     let p1 = is_a("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<>_");
-//     let p = alt((p1, tag("()")));
-//     map(p, |x: &str| x.to_owned())(s)
-// }
-// #[test]
-// fn test_typename() {
-//     assert!(parse_typename("u64").is_ok());
-//     assert!(parse_typename("HashSet<u64>").is_ok());
-//     assert!(parse_typename("()").is_ok());
-// }
 fn parse_varname(s: &str) -> IResult<&str, String> {
     let p = is_a("abcdefghijklmnopqrstuvwxyz0123456789_");
     map(p, |x: &str| x.to_owned())(s)
@@ -102,7 +89,7 @@ fn test_varname() {
 }
 fn parse_param(s: &str) -> IResult<&str, Parameter> {
     let p1 = parse_varname;
-    let p2 = parse_typename2;
+    let p2 = parse_typename;
     let p = separated_pair(p1, tag(":"), p2);
     map(p, |(x, y)| Parameter {
         var_name: x.to_owned(),
@@ -118,7 +105,7 @@ fn test_parse_param() {
 fn parse_function(s: &str) -> IResult<&str, Function> {
     let p1 = preceded(tag("fn"), parse_varname);
     let p2 = delimited(tag("("), separated_list0(tag(","), parse_param), tag(")"));
-    let p3 = preceded(tag("->"), parse_typename2);
+    let p3 = preceded(tag("->"), parse_typename);
     map(terminated(tuple((p1, p2, p3)), tag(";")), |(x, y, z)| {
         Function {
             name: x.to_owned(),
@@ -150,7 +137,7 @@ fn test_functions() {
     );
 }
 fn parse_service(s: &str) -> IResult<&str, Service> {
-    let p1 = preceded(tag("service"), parse_typename2);
+    let p1 = preceded(tag("service"), parse_typename);
     let p = pair(p1, parse_functions);
     map(p, |(name, functions)| Service {
         name: name.to_owned(),
