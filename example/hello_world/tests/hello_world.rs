@@ -48,8 +48,7 @@ async fn test_hello_world() {
         server.serve().await
     });
     let chan = norpc::ClientChannel::new(tx);
-    let chan = tower::service_fn(move |x| chan.clone().call(x));
-    let cli = HelloWorldClient::new(chan);
+    let mut cli = HelloWorldClient::new(chan);
 
     assert_eq!(cli.read(1).await.unwrap(), None);
 
@@ -58,7 +57,7 @@ async fn test_hello_world() {
     assert_eq!(cli.read(2).await.unwrap(), None);
     assert_eq!(cli.read(3).await.unwrap(), None);
 
-    let cli2 = cli.clone();
+    let mut cli2 = cli.clone();
     let mut h = HashSet::new();
     h.insert((2, "two".to_owned()));
     h.insert((3, "three".to_owned()));

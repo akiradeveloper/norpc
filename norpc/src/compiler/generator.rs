@@ -84,7 +84,7 @@ fn generate_trait(svc: &Service) -> String {
 fn generate_client_impl(svc: &Service) -> String {
     let mut funlist = vec![];
     for fun in &svc.functions {
-        let mut params = vec!["&self".to_owned()];
+        let mut params = vec!["&mut self".to_owned()];
         for p in &fun.inputs {
             params.push(format!("{}:{}", p.var_name, p.typ_name));
         }
@@ -99,7 +99,7 @@ fn generate_client_impl(svc: &Service) -> String {
         let f = format!(
             "
 		async fn {}({}) -> Result<{}, norpc::Error<Svc::Error>> {{
-			let rep = self.svc.clone().call({}Request::{}({})).await.map_err(norpc::Error::AppError)?;
+			let rep = self.svc.call({}Request::{}({})).await.map_err(norpc::Error::AppError)?;
 			match rep {{
 				{}Response::{}(v) => Ok(v),
 				_ => unreachable!(),
@@ -113,7 +113,7 @@ fn generate_client_impl(svc: &Service) -> String {
 
     format!(
         "
-	impl<Svc: Service<{}Request, Response = {}Response> + Clone> {}Client<Svc> {{
+	impl<Svc: Service<{}Request, Response = {}Response>> {}Client<Svc> {{
 		pub fn new(svc: Svc) -> Self {{
 			Self {{ svc }}
 		}}
