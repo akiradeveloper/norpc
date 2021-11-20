@@ -37,8 +37,9 @@ fn generate_response(svc: &Service) -> String {
 fn generate_client_struct(svc: &Service) -> String {
     format!(
         "
+    #[derive(Clone)]
 	pub struct {}Client<Svc> {{
-		chan: Svc
+		svc: Svc
 	}}
 	",
         svc.name
@@ -49,7 +50,7 @@ fn generate_server_struct(svc: &Service) -> String {
         "
 	#[derive(Clone)]
 	pub struct {}Service<H: {}> {{
-		inner: H
+		app: H
 	}}
 	",
         svc.name, svc.name
@@ -98,7 +99,7 @@ fn generate_client_impl(svc: &Service) -> String {
         let f = format!(
             "
 		async fn {}({}) -> Result<{}, norpc::Error<Svc::Error>> {{
-			let rep = self.chan.clone().call({}Request::{}({})).await.map_err(norpc::Error::AppError)?;
+			let rep = self.svc.clone().call({}Request::{}({})).await.map_err(norpc::Error::AppError)?;
 			match rep {{
 				{}Response::{}(v) => Ok(v),
 				_ => unreachable!(),
@@ -113,8 +114,8 @@ fn generate_client_impl(svc: &Service) -> String {
     format!(
         "
 	impl<Svc: Service<{}Request, Response = {}Response> + Clone> {}Client<Svc> {{
-		pub fn new(chan: Svc) -> Self {{
-			Self {{ chan }}
+		pub fn new(svc: Svc) -> Self {{
+			Self {{ svc }}
 		}}
 		{}
 	}}
@@ -137,7 +138,7 @@ fn generate_server_impl(svc: &Service) -> String {
         let a = format!(
             "
 		{}Request::{}({}) => {{
-			let rep = inner.{}({}).await?;
+			let rep = app.{}({}).await?;
 			Ok({}Response::{}(rep))
 		}}
 		",
@@ -151,11 +152,11 @@ fn generate_server_impl(svc: &Service) -> String {
     format!(
         "
 	impl<H: {}> {}Service<H> {{
-		pub fn new(inner: H) -> Self {{
-			Self {{ inner }}
+		pub fn new(app: H) -> Self {{
+			Self {{ app }}
 		}}
 		pub async fn call(self, req: {}Request) -> Result<{}Response, H::Error> {{
-			let inner = self.inner.clone();
+			let app = self.app.clone();
 			match req {{
 				{}
 			}}

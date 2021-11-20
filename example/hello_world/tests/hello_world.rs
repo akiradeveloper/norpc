@@ -58,11 +58,12 @@ async fn test_hello_world() {
     assert_eq!(cli.read(2).await.unwrap(), None);
     assert_eq!(cli.read(3).await.unwrap(), None);
 
+    let cli2 = cli.clone();
     let mut h = HashSet::new();
     h.insert((2, "two".to_owned()));
     h.insert((3, "three".to_owned()));
-    cli.write_many(h).await.unwrap();
-    assert_eq!(cli.read(3).await.unwrap(), Some("three".to_owned()));
+    cli2.write_many(h).await.unwrap();
+    assert_eq!(cli2.read(3).await.unwrap(), Some("three".to_owned()));
 
-    assert!(cli.noop().await.is_ok());
+    assert!(cli2.noop().await.is_ok());
 }

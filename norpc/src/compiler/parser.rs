@@ -1,7 +1,7 @@
 //! File = Service+
-//! Service = service Name { Def+ }
+//! Service = service Name { Function+ }
 //! Name = String
-//! Def = "fn" FunName ( Parameter+ ) -> Type ;
+//! Function = "fn" FunName ( Parameter+ ) -> Type ;
 //! FunName = String
 //! Type = String
 //! Var = String
@@ -63,12 +63,10 @@ fn parse_typename(s: &str) -> IResult<&str, String> {
     });
     alt((array, tuple, composite, parse_typeident))(s)
 }
-
 fn parse_varname(s: &str) -> IResult<&str, String> {
     let p = is_a("abcdefghijklmnopqrstuvwxyz0123456789_");
     map(p, |x: &str| x.to_owned())(s)
 }
-
 fn parse_param(s: &str) -> IResult<&str, Parameter> {
     let p1 = parse_varname;
     let p2 = parse_typename;
@@ -78,7 +76,6 @@ fn parse_param(s: &str) -> IResult<&str, Parameter> {
         typ_name: y.to_owned(),
     })(s)
 }
-
 fn parse_function(s: &str) -> IResult<&str, Function> {
     let p1 = preceded(tag("fn"), parse_varname);
     let p2 = delimited(tag("("), separated_list0(tag(","), parse_param), tag(")"));
@@ -91,14 +88,12 @@ fn parse_function(s: &str) -> IResult<&str, Function> {
         }
     })(s)
 }
-
 fn parse_functions(s: &str) -> IResult<&str, Vec<Function>> {
     let p1 = tag("{");
     let p2 = many1(parse_function);
     let p3 = tag("}");
     delimited(p1, p2, p3)(s)
 }
-
 fn parse_service(s: &str) -> IResult<&str, Service> {
     let p1 = preceded(tag("service"), parse_typename);
     let p = pair(p1, parse_functions);
@@ -107,7 +102,6 @@ fn parse_service(s: &str) -> IResult<&str, Service> {
         functions,
     })(s)
 }
-
 pub(super) fn parse(s: &str) -> IResult<&str, Vec<Service>> {
     all_consuming(many1(parse_service))(s)
 }
