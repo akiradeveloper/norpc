@@ -1,13 +1,13 @@
 use super::Service;
 
 fn generate_request(svc: &Service) -> String {
-    let mut list = vec![];
+    let mut variants = vec![];
     for fun in &svc.functions {
         let mut params = vec![];
         for param in &fun.inputs {
             params.push(param.typ_name.clone());
         }
-        list.push(format!("{}({})", fun.name, itertools::join(params, ",")));
+        variants.push(format!("{}({})", fun.name, itertools::join(params, ",")));
     }
     format!(
         "
@@ -16,55 +16,55 @@ fn generate_request(svc: &Service) -> String {
 		{}
 	}}",
         svc.name,
-        itertools::join(list, ",")
+        itertools::join(variants, ",")
     )
 }
 fn generate_response(svc: &Service) -> String {
-    let mut list = vec![];
+    let mut variants = vec![];
     for fun in &svc.functions {
-        list.push(format!("{}({})", fun.name, fun.output));
+        variants.push(format!("{}({})", fun.name, fun.output));
     }
     format!(
         "
         #[allow(non_camel_case_types)]
-        pub enum {}Response {{
+        pub enum {svc_name}Response {{
 		{}
 	}}",
-        svc.name,
-        itertools::join(list, ",")
+        itertools::join(variants, ","),
+        svc_name = svc.name,
     )
 }
 fn generate_client_struct(svc: &Service) -> String {
     format!(
         "
     #[derive(Clone)]
-	pub struct {}Client<Svc> {{
+	pub struct {svc_name}Client<Svc> {{
 		svc: Svc
 	}}
 	",
-        svc.name
+        svc_name = svc.name
     )
 }
 fn generate_server_struct(svc: &Service) -> String {
     format!(
         "
 	#[derive(Clone)]
-	pub struct {}Service<App: {}> {{
+	pub struct {svc_name}Service<App: {svc_name}> {{
 		app: App
 	}}
 	",
-        svc.name, svc.name
+        svc_name = svc.name,
     )
 }
 fn generate_trait(svc: &Service) -> String {
-    let mut list = vec![];
+    let mut methods = vec![];
     for fun in &svc.functions {
         let mut params = vec!["self".to_owned()];
         for param in &fun.inputs {
             params.push(format!("{}:{}", param.var_name, param.typ_name));
         }
         let params = itertools::join(params, ",");
-        list.push(format!(
+        methods.push(format!(
             "async fn {}({}) -> Result<{}, Self::Error>;",
             fun.name, params, fun.output
         ));
@@ -72,17 +72,17 @@ fn generate_trait(svc: &Service) -> String {
     format!(
         "
 		#[norpc::async_trait]
-		pub trait {}: Clone {{
+		pub trait {svc_name}: Clone {{
 			type Error;
 			{}
 		}}
 		",
-        svc.name,
-        itertools::join(list, "")
+        itertools::join(methods, ""),
+        svc_name = svc.name,
     )
 }
 fn generate_client_impl(svc: &Service) -> String {
-    let mut funlist = vec![];
+    let mut methods = vec![];
     for fun in &svc.functions {
         let mut params = vec!["&mut self".to_owned()];
         for p in &fun.inputs {
@@ -98,35 +98,37 @@ fn generate_client_impl(svc: &Service) -> String {
 
         let f = format!(
             "
-		async fn {}({}) -> Result<{}, norpc::Error<Svc::Error>> {{
-			let rep = self.svc.call({}Request::{}({})).await.map_err(norpc::Error::AppError)?;
+		async fn {fun_name}({params}) -> Result<{output}, norpc::Error<Svc::Error>> {{
+			let rep = self.svc.call({}Request::{fun_name}({req_params})).await.map_err(norpc::Error::AppError)?;
 			match rep {{
-				{}Response::{}(v) => Ok(v),
+				{svc_name}Response::{fun_name}(v) => Ok(v),
 				_ => unreachable!(),
 			}}
 		}}
 		",
-            fun.name, params, fun.output, svc.name, fun.name, req_params, svc.name, fun.name
+            svc_name = svc.name,
+            fun_name = fun.name,
+            params = params,
+            output = fun.output,
+            req_params = req_params,
         );
-        funlist.push(f);
+        methods.push(f);
     }
     format!(
         "
-	impl<Svc: Service<{}Request, Response = {}Response>> {}Client<Svc> {{
+	impl<Svc: Service<{svc_name}Request, Response = {svc_name}Response>> {svc_name}Client<Svc> {{
 		pub fn new(svc: Svc) -> Self {{
 			Self {{ svc }}
 		}}
 		{}
 	}}
 	",
-        svc.name,
-        svc.name,
-        svc.name,
-        itertools::join(funlist, "")
+        itertools::join(methods, ""),
+        svc_name = svc.name,
     )
 }
 fn generate_server_impl(svc: &Service) -> String {
-    let mut arms = vec![];
+    let mut match_arms = vec![];
     for fun in &svc.functions {
         let mut req_params = vec![];
         for p in &fun.inputs {
@@ -136,25 +138,26 @@ fn generate_server_impl(svc: &Service) -> String {
 
         let a = format!(
             "
-		{}Request::{}({}) => {{
-			let rep = app.{}({}).await?;
-			Ok({}Response::{}(rep))
+		{svc_name}Request::{fun_name}({req_params}) => {{
+			let rep = app.{fun_name}({req_params}).await?;
+			Ok({svc_name}Response::{fun_name}(rep))
 		}}
 		",
-            svc.name, fun.name, req_params, fun.name, req_params, svc.name, fun.name
+            svc_name = svc.name,
+            fun_name = fun.name,
+            req_params = req_params,
         );
 
-        arms.push(a);
+        match_arms.push(a);
     }
-    let arms = itertools::join(arms, "");
 
     format!(
         "
-	impl<App: {}> {}Service<App> {{
+	impl<App: {svc_name}> {svc_name}Service<App> {{
 		pub fn new(app: App) -> Self {{
 			Self {{ app }}
 		}}
-		pub async fn call(self, req: {}Request) -> Result<{}Response, App::Error> {{
+		pub async fn call(self, req: {svc_name}Request) -> Result<{svc_name}Response, App::Error> {{
 			let app = self.app;
 			match req {{
 				{}
@@ -162,7 +165,8 @@ fn generate_server_impl(svc: &Service) -> String {
 		}}
 	}}
 	",
-        svc.name, svc.name, svc.name, svc.name, arms
+        itertools::join(match_arms, ","),
+        svc_name = svc.name,
     )
 }
 pub(super) fn generate(services: Vec<Service>) -> String {
