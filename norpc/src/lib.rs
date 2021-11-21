@@ -31,25 +31,41 @@ impl<X, Y> ClientChannel<X, Y> {
     pub fn new(tx: mpsc::UnboundedSender<Request<X, Y>>) -> Self {
         Self { tx }
     }
-    pub async fn call(self, req: X) -> anyhow::Result<Y> {
-        let (tx1, rx1) = oneshot::channel::<Y>();
-        let req = Request {
-            inner: req,
-            tx: tx1,
-        };
-        if self.tx.send(req).is_ok() {
-            let rep = rx1.await?;
-            Ok(rep)
-        } else {
-            anyhow::bail!("failed to send a request")
-        }
-    }
 }
 impl<X, Y> Clone for ClientChannel<X, Y> {
     fn clone(&self) -> Self {
         Self {
             tx: self.tx.clone(),
         }
+    }
+}
+impl<X: 'static, Y: 'static> Service<X> for ClientChannel<X, Y> {
+    type Response = Y;
+    type Error = anyhow::Error;
+    type Future = std::pin::Pin<Box<dyn std::future::Future<Output = Result<Y, Self::Error>>>>;
+
+    fn poll_ready(
+        &mut self,
+        _: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Result<(), Self::Error>> {
+        Ok(()).into()
+    }
+
+    fn call(&mut self, req: X) -> Self::Future {
+        let tx = self.tx.clone();
+        Box::pin(async move {
+            let (tx1, rx1) = oneshot::channel::<Y>();
+            let req = Request {
+                inner: req,
+                tx: tx1,
+            };
+            if tx.send(req).is_ok() {
+                let rep = rx1.await?;
+                Ok(rep)
+            } else {
+                anyhow::bail!("failed to send a request")
+            }
+        })
     }
 }
 
