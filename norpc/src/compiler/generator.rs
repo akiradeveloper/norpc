@@ -102,6 +102,7 @@ fn generate_client_impl(svc: &Service) -> String {
 			let rep = self.svc.call({}Request::{fun_name}({req_params})).await.map_err(norpc::Error::AppError)?;
 			match rep {{
 				{svc_name}Response::{fun_name}(v) => Ok(v),
+                #[allow(unreachable_patterns)]
 				_ => unreachable!(),
 			}}
 		}}
