@@ -45,9 +45,6 @@ Example:
 
 ```
 service HelloWorld {
-    fn read(id: u64) -> Option<String>;
-    fn write(id: u64, s: String) -> ();
-    fn write_many(kv: HashSet<(u64, String)>) -> ();
-    fn noop() -> ();
+    fn hello(s: String) -> String;
 }
 ```
