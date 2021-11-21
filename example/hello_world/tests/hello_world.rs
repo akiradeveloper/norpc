@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::sync::RwLock;
-use tower_service::Service;
+use tower::Service;
 
 norpc::include_code!("hello_world");
 
