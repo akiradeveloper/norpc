@@ -43,7 +43,6 @@ async fn test_hello_world() {
     tokio::spawn(async move {
         let app = HelloWorldApp::new();
         let service = HelloWorldService::new(app);
-        let service = tower::service_fn(move |x| service.clone().call(x));
         let server = norpc::ServerChannel::new(rx, service);
         server.serve().await
     });
