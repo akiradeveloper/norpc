@@ -157,13 +157,26 @@ fn generate_server_impl(svc: &Service) -> String {
 		pub fn new(app: App) -> Self {{
 			Self {{ app }}
 		}}
-		pub async fn call(self, req: {svc_name}Request) -> Result<{svc_name}Response, App::Error> {{
-			let app = self.app;
-			match req {{
-				{}
-			}}
-		}}
 	}}
+    impl<App: {svc_name} + 'static + Send> tower::Service<{svc_name}Request> for {svc_name}Service<App> {{
+        type Response = {svc_name}Response;
+        type Error = App::Error;
+        type Future = std::pin::Pin<Box<dyn std::future::Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+        fn poll_ready(
+            &mut self,
+            _: &mut std::task::Context<'_>,
+        ) -> std::task::Poll<Result<(), Self::Error>> {{
+            Ok(()).into()
+        }}
+		fn call(&mut self, req: {svc_name}Request) -> Self::Future {{
+			let app = self.app.clone();
+            Box::pin(async move {{
+                match req {{
+                    {}
+                }}
+            }})
+		}}
+    }}
 	",
         itertools::join(match_arms, ","),
         svc_name = svc.name,
