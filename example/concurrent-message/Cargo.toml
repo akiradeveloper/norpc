@@ -9,6 +9,7 @@ edition = "2021"
 tokio = { version = "*", features = ["full"] }
 tower = { version = "*", features = ["full"] }
 futures = "*"
+rand = "0.8"
 
 norpc = { path = "../../norpc" }
 

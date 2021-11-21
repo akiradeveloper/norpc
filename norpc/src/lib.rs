@@ -93,9 +93,9 @@ where
     }
     pub async fn serve(mut self) {
         while let Some(Request { tx, inner }) = self.rx.recv().await {
-            let mut cln = self.service.clone();
-            tokio::spawn(async move {
-                if let Ok(rep) = cln.call(inner).await {
+            let fut = self.service.call(inner);
+            tokio::spawn(async {
+                if let Ok(rep) = fut.await {
                     tx.send(rep).ok();
                 }
             });

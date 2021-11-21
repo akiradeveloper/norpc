@@ -25,6 +25,8 @@ impl IdAllocApp {
 impl IdAlloc for IdAllocApp {
     type Error = ();
     async fn alloc(mut self, name: u64) -> Result<u64, Self::Error> {
+        let sleep_time = rand::random::<u64>() % 100;
+        tokio::time::sleep(std::time::Duration::from_millis(sleep_time)).await;
         let id = self.n.fetch_add(1, Ordering::SeqCst);
         self.id_store_cli.save(name, id).await.unwrap();
         Ok(name)
@@ -55,8 +57,6 @@ impl IdStore for IdStoreApp {
     }
 }
 
-// If we use single-thread mode, the test fails because diff_cnt == 0.
-// #[tokio::test]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_concurrent_message() {
     let (tx, rx) = mpsc::unbounded_channel();
