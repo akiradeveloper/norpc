@@ -9,3 +9,5 @@ jobs:
       - uses: actions/checkout@v2
       - name: test
         run: cargo test
+      - name: bench
+        run: cargo bench
