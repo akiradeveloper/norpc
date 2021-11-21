@@ -156,7 +156,7 @@ fn generate_server_impl(svc: &Service) -> String {
 			Self {{ app }}
 		}}
 		pub async fn call(self, req: {}Request) -> Result<{}Response, App::Error> {{
-			let app = self.app.clone();
+			let app = self.app;
 			match req {{
 				{}
 			}}
