@@ -56,6 +56,7 @@ impl IdStore for IdStoreApp {
     }
 }
 
+// If we use single-thread mode, the test fails because diff_cnt == 0.
 // #[tokio::test]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_concurrent_message() {
