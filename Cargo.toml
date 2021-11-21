@@ -1,6 +1,6 @@
 [workspace]
 members = [
     "norpc",
-    "example/hello_world",
+    "example/hello-world",
     "example/concurrent-message",
 ]
