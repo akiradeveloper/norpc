@@ -82,7 +82,7 @@ pub struct ServerChannel<Req, Svc: Service<Req>> {
     service: Svc,
     rx: mpsc::UnboundedReceiver<Request<Req, Svc::Response>>,
 }
-impl<Req, Svc: Service<Req> + 'static + Send + Clone> ServerChannel<Req, Svc>
+impl<Req, Svc: Service<Req> + 'static + Send> ServerChannel<Req, Svc>
 where
     Req: 'static + Send,
     Svc::Future: Send,
@@ -93,6 +93,8 @@ where
     }
     pub async fn serve(mut self) {
         while let Some(Request { tx, inner }) = self.rx.recv().await {
+            // back-pressure
+            futures::future::poll_fn(|ctx| self.service.poll_ready(ctx)).await.ok();
             let fut = self.service.call(inner);
             tokio::spawn(async {
                 if let Ok(rep) = fut.await {

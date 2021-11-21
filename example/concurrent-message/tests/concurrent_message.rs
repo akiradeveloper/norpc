@@ -5,6 +5,7 @@ use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::sync::RwLock;
 use tower::Service;
+use tower::ServiceBuilder;
 
 norpc::include_code!("concurrent_message");
 
@@ -57,6 +58,8 @@ impl IdStore for IdStoreApp {
     }
 }
 
+const N: u64 = 10000;
+
 #[tokio::test(flavor = "multi_thread")]
 async fn test_concurrent_message() {
     let (tx, rx) = mpsc::unbounded_channel();
@@ -74,6 +77,10 @@ async fn test_concurrent_message() {
     tokio::spawn(async move {
         let app = IdAllocApp::new(id_store_cli_cln);
         let service = IdAllocService::new(app);
+        let service = ServiceBuilder::new()
+            // .concurrency_limit(100)
+            .rate_limit(2000, std::time::Duration::from_secs(1))
+            .service(service);
         let server = norpc::ServerChannel::new(rx, service);
         server.serve().await
     });
@@ -81,14 +88,16 @@ async fn test_concurrent_message() {
     let id_alloc_cli = IdAllocClient::new(chan);
 
     let mut queue = futures::stream::FuturesUnordered::new();
-    for i in 1..=10000 {
+    for i in 1..=N {
         let mut cli = id_alloc_cli.clone();
         let fut = async move { cli.alloc(i).await };
         queue.push(fut);
     }
     use futures::StreamExt;
+    let mut n = 0;
     let mut diff_cnt = 0;
     while let Some(Ok(name)) = queue.next().await {
+        n += 1;
         let id0 = id_store_cli.query(name).await.unwrap();
         assert!(id0.is_some());
         let id = id0.unwrap();
@@ -96,5 +105,6 @@ async fn test_concurrent_message() {
             diff_cnt += 1;
         }
     }
+    assert_eq!(n, N);
     assert!(diff_cnt > 0);
 }
