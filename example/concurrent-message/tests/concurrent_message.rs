@@ -1,4 +1,3 @@
-use norpc::ClientChannel;
 use std::collections::HashMap;
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
@@ -12,10 +11,10 @@ norpc::include_code!("concurrent_message");
 #[derive(Clone)]
 struct IdAllocApp {
     n: Arc<AtomicU64>,
-    id_store_cli: IdStoreClient<ClientChannel<IdStoreRequest, IdStoreResponse>>,
+    id_store_cli: IdStoreClientT,
 }
 impl IdAllocApp {
-    fn new(id_store_cli: IdStoreClient<ClientChannel<IdStoreRequest, IdStoreResponse>>) -> Self {
+    fn new(id_store_cli: IdStoreClientT) -> Self {
         Self {
             n: Arc::new(AtomicU64::new(1)),
             id_store_cli,

@@ -41,6 +41,7 @@ fn generate_client_struct(svc: &Service) -> String {
 	pub struct {svc_name}Client<Svc> {{
 		svc: Svc
 	}}
+    pub type {svc_name}ClientT = {svc_name}Client<norpc::ClientChannel<{svc_name}Request, {svc_name}Response>>;
 	",
         svc_name = svc.name
     )
