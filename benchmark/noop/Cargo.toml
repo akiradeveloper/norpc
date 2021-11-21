@@ -1,0 +1,23 @@
+[package]
+name = "noop-bench"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "*", features = ["full"] }
+tower = { version = "*", features = ["full"] }
+
+norpc = { path = "../../norpc" }
+
+[build-dependencies]
+norpc = { path = "../../norpc" }
+
+[dev-dependencies]
+# https://github.com/bheisler/criterion.rs/blob/master/book/src/user_guide/benchmarking_async.md
+criterion = { version = "0.3.5", features = ["async_tokio"] }
+
+[[bench]]
+name = "noop"
+harness = false

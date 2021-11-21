@@ -4,4 +4,5 @@ members = [
     "example/hello-world",
     "example/kvstore",
     "example/concurrent-message",
+    "benchmark/noop",
 ]
