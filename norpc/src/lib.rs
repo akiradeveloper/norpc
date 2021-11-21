@@ -82,7 +82,7 @@ pub struct ServerChannel<Req, Svc: Service<Req>> {
     service: Svc,
     rx: mpsc::UnboundedReceiver<Request<Req, Svc::Response>>,
 }
-impl<Req, Svc: Service<Req> + 'static + Send + Clone> ServerChannel<Req, Svc>
+impl<Req, Svc: Service<Req> + 'static + Send> ServerChannel<Req, Svc>
 where
     Req: 'static + Send,
     Svc::Future: Send,
