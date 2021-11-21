@@ -2,5 +2,6 @@
 members = [
     "norpc",
     "example/hello-world",
+    "example/kvstore",
     "example/concurrent-message",
 ]
