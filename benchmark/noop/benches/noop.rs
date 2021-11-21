@@ -14,7 +14,7 @@ impl Noop for NoopApp {
     }
 }
 
-use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 
 fn bench_noop(c: &mut Criterion) {
     let rt = tokio::runtime::Builder::new_multi_thread()
