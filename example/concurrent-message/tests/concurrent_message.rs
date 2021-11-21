@@ -64,7 +64,6 @@ async fn test_concurrent_message() {
     tokio::spawn(async move {
         let app = IdStoreApp::new();
         let service = IdStoreService::new(app);
-        let service = tower::service_fn(move |x| service.clone().call(x));
         let server = norpc::ServerChannel::new(rx, service);
         server.serve().await
     });
@@ -76,7 +75,6 @@ async fn test_concurrent_message() {
     tokio::spawn(async move {
         let app = IdAllocApp::new(id_store_cli_cln);
         let service = IdAllocService::new(app);
-        let service = tower::service_fn(move |x| service.clone().call(x));
         let server = norpc::ServerChannel::new(rx, service);
         server.serve().await
     });
