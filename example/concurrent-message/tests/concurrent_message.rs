@@ -78,8 +78,8 @@ async fn test_concurrent_message() {
         let app = IdAllocApp::new(id_store_cli_cln);
         let service = IdAllocService::new(app);
         let service = ServiceBuilder::new()
-            // .concurrency_limit(100)
-            .rate_limit(2000, std::time::Duration::from_secs(1))
+            // Changing this value will see a different complete time.
+            .concurrency_limit(100)
             .service(service);
         let server = norpc::ServerChannel::new(rx, service);
         server.serve().await
