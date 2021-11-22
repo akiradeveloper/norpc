@@ -48,3 +48,7 @@ service HelloWorld {
     fn hello(s: String) -> String;
 }
 ```
+
+## Author
+
+Akira Hayakawa (@akiradeveloper)
