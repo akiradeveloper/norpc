@@ -49,6 +49,18 @@ service HelloWorld {
 }
 ```
 
+## Performance (Compared to tarpc)
+
+The RPC overhead is x1.7 lower than tarpc. With norpc, you can send more than 100k requests per second.
+
+The benchmark program launches a noop server and send requests from the client.
+In measurement, [Criterion](https://github.com/bheisler/criterion.rs) is used.
+
+```
+noop request/1          time:   [8.9181 us 8.9571 us 9.0167 us]
+noop request (tarpc)/1  time:   [15.476 us 15.514 us 15.554 us]
+```
+
 ## Author
 
 Akira Hayakawa (@akiradeveloper)
