@@ -12,11 +12,11 @@ fn generate_request(svc: &Service) -> String {
     format!(
         "
         #[allow(non_camel_case_types)]
-        pub enum {}Request {{
+        pub enum {svc_name}Request {{
 		{}
 	}}",
-        svc.name,
-        itertools::join(variants, ",")
+        itertools::join(variants, ","),
+        svc_name = svc.name,
     )
 }
 fn generate_response(svc: &Service) -> String {
@@ -100,6 +100,7 @@ fn generate_client_impl(svc: &Service) -> String {
         let f = format!(
             "
 		async fn {fun_name}({params}) -> Result<{output}, norpc::Error<Svc::Error>> {{
+            norpc::poll_fn(|ctx| self.svc.poll_ready(ctx)).await.ok();
 			let rep = self.svc.call({}Request::{fun_name}({req_params})).await.map_err(norpc::Error::AppError)?;
 			match rep {{
 				{svc_name}Response::{fun_name}(v) => Ok(v),

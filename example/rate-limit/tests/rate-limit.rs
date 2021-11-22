@@ -22,7 +22,7 @@ async fn test_rate_limit() {
         let app = RateLimitApp;
         let service = RateLimitService::new(app);
         let service = ServiceBuilder::new()
-            .rate_limit(2000, std::time::Duration::from_secs(1))
+            .rate_limit(5000, std::time::Duration::from_secs(1))
             .service(service);
         let server = norpc::ServerChannel::new(rx, service);
         server.serve().await
