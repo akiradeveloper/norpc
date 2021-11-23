@@ -1,3 +1,3 @@
 fn main() {
-    norpc::build::Compiler::default().compile("hello_world.norpc");
+    norpc::build::Compiler::new().compile("hello_world.norpc");
 }
