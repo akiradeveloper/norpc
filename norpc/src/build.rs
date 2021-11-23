@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 pub struct Compiler;
 
 impl Compiler {
-    pub fn default() -> Self {
+    pub fn new() -> Self {
         Self {}
     }
     pub fn compile<P: AsRef<Path>>(self, filepath: P) {

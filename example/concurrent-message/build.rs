@@ -1,3 +1,3 @@
 fn main() {
-    norpc::build::Compiler::default().compile("concurrent_message.norpc");
+    norpc::build::Compiler::new().compile("concurrent_message.norpc");
 }
