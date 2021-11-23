@@ -12,10 +12,10 @@ norpc::include_code!("concurrent_message");
 #[derive(Clone)]
 struct IdAllocApp {
     n: Arc<AtomicU64>,
-    id_store_cli: IdStoreClientT,
+    id_store_cli: IdStoreClientT<()>,
 }
 impl IdAllocApp {
-    fn new(id_store_cli: IdStoreClientT) -> Self {
+    fn new(id_store_cli: IdStoreClientT<()>) -> Self {
         Self {
             n: Arc::new(AtomicU64::new(1)),
             id_store_cli,
