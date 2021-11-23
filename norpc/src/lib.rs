@@ -33,7 +33,7 @@ pub enum Error<AppError> {
     TransportError(TransportError),
 }
 
-/// MPSC channel wrapper on the client-side.
+/// mpsc channel wrapper on the client-side.
 pub struct ClientChannel<X, Y, AppError> {
     tx: mpsc::UnboundedSender<Request<X, Result<Y, AppError>>>,
 }
@@ -89,7 +89,7 @@ pub struct Request<X, Y> {
     tx: oneshot::Sender<Y>,
 }
 
-/// MPSC channel wrapper on the server-side.
+/// mpsc channel wrapper on the server-side.
 pub struct ServerChannel<Req, Svc: Service<Req>> {
     service: Svc,
     rx: mpsc::UnboundedReceiver<Request<Req, Result<Svc::Response, Svc::Error>>>,
