@@ -8,10 +8,10 @@
 
 ## Motivation
 
-Developing an async application is often very difficult task but
-building an async application as a set of microservices makes designing and implementation much easier.
+Developing an async application is often a very difficult task but
+building an async application as a set of microservices makes both designing and implementation much easier.
 
-gRPC is a great tool in microservices. You can use this for communication over network but this isn't good idea unless networking involves.
+gRPC is a great tool in microservices. You can use this for communication over network but this isn't a good idea unless networking involves.
 
 In such case, in-process microservices is a way to go. The services run on async runtime and communicate each other through in-memory async channel which doesn't occur serialization thus much more efficient than gRPC.
 I believe in-process microservices is a revolution for designing local async applications.
@@ -20,7 +20,7 @@ However, defining microservices in Rust does need a lot of coding for each servi
 
 [tarpc](https://github.com/google/tarpc) is a previous work in this area however it is not a best framework for in-process microservices because it tries to support both in-process and networking microservices under the same abstraction. This isn't a good idea because the both implementation will because sub-optimal. In my opinion, networking microservices should use gRPC and in-process microservices should use dedicated framework for the specific purpose.
 
-Also, tarpc doesn't use Tower's `Service` but define a similar abstraction called `Serve` by itself. This leads to reimplement functions like rate-limiting and timeout which can be realized by just stacking `Service` decorators if depends on Tower. Since tarpc needs huge rework to become Tower-based, there is a chance to implement my own framework from scratch which will be much smaller and cleaner than tarpc because it only supports in-process microservices and is able to exploit the Tower ecosystem.
+Also, tarpc doesn't use Tower's `Service` but define a similar abstraction called `Serve` by itself. This leads to reimplementing functions like rate-limiting and timeout which can be realized by just stacking `Service` decorators if depends on Tower. Since tarpc needs huge rework to become Tower-based, there is a chance to implement my own framework from scratch which will be much smaller and cleaner than tarpc because it only supports in-process microservices and is able to exploit the Tower ecosystem.
 
 ## Architecture
 
@@ -34,7 +34,7 @@ Also, tarpc doesn't use Tower's `Service` but define a similar abstraction calle
 The core of the Tower ecosystem is an abstraction called `Service` which is like a function from `Request` to `Response`.
 The ecosystem has many decorators to add new behavior to an existing `Service`.
 
-The client requests is coming from the top-left of the stacks and flows down to the bottom-right.
+In the diagram, the client requests is coming from the top-left of the stacks and flows down to the bottom-right.
 The client and server is connected by async channel driven by Tokio runtime so there is no overhead for the serialization
 and copying because the message just "moves".
 
