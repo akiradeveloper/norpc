@@ -1,4 +1,4 @@
-# norpc
+# norpc = not remote procedure call
 
 [![Crates.io](https://img.shields.io/crates/v/norpc.svg)](https://crates.io/crates/norpc)
 [![documentation](https://docs.rs/norpc/badge.svg)](https://docs.rs/norpc)
