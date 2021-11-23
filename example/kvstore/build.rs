@@ -1,3 +1,3 @@
 fn main() {
-    norpc::build::Compiler::default().compile("kvstore.norpc");
+    norpc::build::Compiler::new().compile("kvstore.norpc");
 }
