@@ -1,7 +1,10 @@
 use tokio::sync::mpsc;
 use tower::Service;
 
-norpc::include_code!("noop");
+#[norpc::service]
+trait Noop {
+    fn noop() -> ();
+}
 
 #[derive(Clone)]
 struct NoopApp;

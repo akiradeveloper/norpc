@@ -4,7 +4,13 @@ use tokio::sync::mpsc;
 use tokio::sync::RwLock;
 use tower::Service;
 
-norpc::include_code!("kvstore");
+#[norpc::service]
+trait KVStore {
+    fn read(id: u64) -> Option<String>;
+    fn write(id: u64, s: String) -> ();
+    fn write_many(kv: HashSet<(u64, String)>) -> ();
+    fn noop() -> ();
+}
 
 #[derive(Clone)]
 struct KVStoreApp {
