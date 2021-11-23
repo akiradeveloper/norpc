@@ -1,6 +1,6 @@
 [package]
 name = "norpc"
-version = "0.2.4"
+version = "0.3.0"
 authors = ["Akira Hayakawa <ruby.wktk@gmail.com>"]
 edition = "2021"
 license = "MIT"
