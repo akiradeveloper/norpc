@@ -41,7 +41,7 @@ fn generate_client_struct(svc: &Service) -> String {
 	pub struct {svc_name}Client<Svc> {{
 		svc: Svc
 	}}
-    pub type {svc_name}ClientT = {svc_name}Client<norpc::ClientChannel<{svc_name}Request, {svc_name}Response>>;
+    pub type {svc_name}ClientT<AppError> = {svc_name}Client<norpc::ClientChannel<{svc_name}Request, {svc_name}Response, AppError>>;
 	",
         svc_name = svc.name
     )
@@ -99,9 +99,9 @@ fn generate_client_impl(svc: &Service) -> String {
 
         let f = format!(
             "
-		async fn {fun_name}({params}) -> Result<{output}, norpc::Error<Svc::Error>> {{
+		async fn {fun_name}({params}) -> Result<{output}, Svc::Error> {{
             norpc::poll_fn(|ctx| self.svc.poll_ready(ctx)).await.ok();
-			let rep = self.svc.call({}Request::{fun_name}({req_params})).await.map_err(norpc::Error::AppError)?;
+			let rep = self.svc.call({}Request::{fun_name}({req_params})).await?;
 			match rep {{
 				{svc_name}Response::{fun_name}(v) => Ok(v),
                 #[allow(unreachable_patterns)]

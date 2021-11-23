@@ -12,10 +12,10 @@ norpc::include_code!("concurrent_message");
 #[derive(Clone)]
 struct IdAllocApp {
     n: Arc<AtomicU64>,
-    id_store_cli: IdStoreClientT,
+    id_store_cli: IdStoreClientT<()>,
 }
 impl IdAllocApp {
-    fn new(id_store_cli: IdStoreClientT) -> Self {
+    fn new(id_store_cli: IdStoreClientT<()>) -> Self {
         Self {
             n: Arc::new(AtomicU64::new(1)),
             id_store_cli,
@@ -29,7 +29,8 @@ impl IdAlloc for IdAllocApp {
         let sleep_time = rand::random::<u64>() % 100;
         tokio::time::sleep(std::time::Duration::from_millis(sleep_time)).await;
         let id = self.n.fetch_add(1, Ordering::SeqCst);
-        self.id_store_cli.save(name, id).await.unwrap();
+        let r: Result<(), norpc::Error<()>> = self.id_store_cli.save(name, id).await;
+        assert!(r.is_ok());
         Ok(name)
     }
 }
