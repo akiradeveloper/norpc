@@ -14,45 +14,17 @@ You don't need to have `Result` type in the output
 because you can give your application a error type in later section.
 
 ```
-service HelloWorld {
+#[norpc::service]
+trait HelloWorld {
     fn hello(s: String) -> String;
 }
 ```
 
-## (2) Generate the code
+## (2) Implement the application
 
-norpc compiler generates a Rust code from the service definition.
-You can use `norpc::build::Compiler` in build.rs to generate the code 
-in build time.
+Trait definition is included in the generated code and you have to implement the trait.
 
-```rust
-fn main() {
-    norpc::build::Compiler::new().compile("hello_world.norpc");
-}
-```
-
-Don't forget to add build-dependencies to Cargo.toml.
-
-```
-[build-dependencies]
-norpc = "0.3"
-```
-
-## (3) Include the code
-
-The generated code is placed in somewhere under the target directory.
-To include the code, you can use `norpc::include_code!` macro.
-The code is truly included just like C include.
-
-```rust
-norpc::include_code!("hello_world");
-```
-
-## (4) Implement the application
-
-Trait definition is included in the generated code and you have to implement the trait. The recommendation here is to name it `struct ServiceNameApp`.
-
-You can define your own error type here and let the functions returns the error.
+You can define your own error type here and let the functions return the error.
 This error will be propagated back to the client throughout the channel.
 
 ```rust
@@ -67,9 +39,10 @@ impl HelloWorld for HelloWorldApp {
 }
 ```
 
-Note that this struct should be `Clone` because the application is cloned in concurrent requests. So if your application have shared state, wrap it in `Arc` to share the state between threads.
+Note that this struct should be `Clone` because the application is cloned in concurrent requests.
+So if your application have shared state, wrap it in `Arc` to share the state between threads.
 
-## (5) Start the server on async runtime
+## (3) Start the server on Tokio runtime
 
 Now, definition phase is over. Let's start the server in your main function.
 
@@ -87,9 +60,9 @@ Then, feed the `Receiver` side to the server-side and start the event loop.
 
 ```
 
-## (6) Access the server from the client
+## (4) Access the server from the client
 
-To access the server from the client, use the `Sender` side of the channel.
+To access the server from a client, use the `Sender` side of the channel.
 
 ```rust
     let chan = norpc::ClientChannel::new(tx);
