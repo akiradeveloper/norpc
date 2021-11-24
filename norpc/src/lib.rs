@@ -6,7 +6,7 @@ use tower_service::Service;
 pub use async_trait::async_trait;
 pub use futures::future::poll_fn;
 
-pub use norpc_codegen::service;
+pub use norpc_macros::service;
 
 #[derive(thiserror::Error, Debug)]
 pub enum TransportError {
