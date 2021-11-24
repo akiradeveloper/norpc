@@ -3,7 +3,7 @@ use tower::Service;
 
 #[norpc::service]
 trait Noop {
-    fn noop() -> ();
+    fn noop();
 }
 
 #[derive(Clone)]

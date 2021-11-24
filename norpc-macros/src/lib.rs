@@ -77,8 +77,10 @@ fn parse_func(f: &TraitItem) -> Function {
             match &sig.output {
                 ReturnType::Type(_, x) => {
                     output_ty = quote!(#x).to_string();
-                }
-                _ => unreachable!(),
+                },
+                ReturnType::Default => {
+                    output_ty = "()".to_string();
+                },
             }
             Function {
                 name: func_name,

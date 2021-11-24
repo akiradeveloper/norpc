@@ -13,7 +13,7 @@ trait IdAlloc {
 }
 #[norpc::service]
 trait IdStore {
-    fn save(name: u64, id: u64) -> ();
+    fn save(name: u64, id: u64);
     fn query(name: u64) -> Option<u64>;
 }
 

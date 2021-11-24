@@ -7,12 +7,12 @@ use tower::Service;
 #[norpc::service]
 trait KVStore {
     fn read(id: u64) -> Option<String>;
-    fn write(id: u64, s: String) -> ();
-    fn write_many(kv: HashSet<(u64, String)>) -> ();
+    fn write(id: u64, s: String);
+    fn write_many(kv: HashSet<(u64, String)>);
     // We can return a result from app to the client.
     fn noop() -> Result<bool, ()>;
     // If app function fails error is propagated to the client.
-    fn panic() -> ();
+    fn panic();
 }
 
 #[derive(Clone)]

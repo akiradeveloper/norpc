@@ -6,7 +6,7 @@ const N: usize = 10000;
 
 #[norpc::service]
 trait RateLimit {
-    fn noop() -> ();
+    fn noop();
 }
 
 #[derive(Clone)]
