@@ -10,9 +10,8 @@ trait HelloWorld {
 struct HelloWorldApp;
 #[norpc::async_trait]
 impl HelloWorld for HelloWorldApp {
-    type Error = ();
-    async fn hello(self, s: String) -> Result<String, Self::Error> {
-        Ok(format!("Hello, {}", s))
+    async fn hello(self, s: String) -> String {
+        format!("Hello, {}", s)
     }
 }
 #[tokio::test(flavor = "multi_thread")]

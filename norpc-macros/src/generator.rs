@@ -41,7 +41,7 @@ fn generate_client_struct(svc: &Service) -> String {
 	pub struct {svc_name}Client<Svc> {{
 		svc: Svc
 	}}
-    pub type {svc_name}ClientT<AppError> = {svc_name}Client<norpc::ClientChannel<{svc_name}Request, {svc_name}Response, AppError>>;
+    pub type {svc_name}ClientT = {svc_name}Client<norpc::ClientChannel<{svc_name}Request, {svc_name}Response>>;
 	",
         svc_name = svc.name
     )
@@ -66,7 +66,7 @@ fn generate_trait(svc: &Service) -> String {
         }
         let params = itertools::join(params, ",");
         methods.push(format!(
-            "async fn {}({}) -> Result<{}, Self::Error>;",
+            "async fn {}({}) -> {};",
             fun.name, params, fun.output
         ));
     }
@@ -74,7 +74,6 @@ fn generate_trait(svc: &Service) -> String {
         "
 		#[norpc::async_trait]
 		pub trait {svc_name}: Clone {{
-			type Error;
 			{}
 		}}
 		",
@@ -142,7 +141,7 @@ fn generate_server_impl(svc: &Service) -> String {
         let a = format!(
             "
 		{svc_name}Request::{fun_name}({req_params}) => {{
-			let rep = app.{fun_name}({req_params}).await?;
+			let rep = app.{fun_name}({req_params}).await;
 			Ok({svc_name}Response::{fun_name}(rep))
 		}}
 		",
@@ -163,7 +162,7 @@ fn generate_server_impl(svc: &Service) -> String {
 	}}
     impl<App: {svc_name} + 'static + Send> tower::Service<{svc_name}Request> for {svc_name}Service<App> {{
         type Response = {svc_name}Response;
-        type Error = App::Error;
+        type Error = ();
         type Future = std::pin::Pin<Box<dyn std::future::Future<Output = Result<Self::Response, Self::Error>> + Send>>;
         fn poll_ready(
             &mut self,
