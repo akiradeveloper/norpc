@@ -9,7 +9,10 @@ trait KVStore {
     fn read(id: u64) -> Option<String>;
     fn write(id: u64, s: String) -> ();
     fn write_many(kv: HashSet<(u64, String)>) -> ();
-    fn noop() -> ();
+    // We can return a result from app to the client.
+    fn noop() -> Result<bool, ()>;
+    // If app function fails error is propagated to the client.
+    fn panic() -> ();
 }
 
 #[derive(Clone)]
@@ -36,7 +39,12 @@ impl KVStore for KVStoreApp {
             self.state.write().await.insert(k, v);
         }
     }
-    async fn noop(self) {}
+    async fn noop(self) -> Result<bool, ()> {
+        Ok(true)
+    }
+    async fn panic(self) {
+        panic!()
+    }
 }
 #[tokio::test(flavor = "multi_thread")]
 async fn test_kvstore() {
@@ -64,5 +72,9 @@ async fn test_kvstore() {
     cli2.write_many(h).await.unwrap();
     assert_eq!(cli2.read(3).await.unwrap(), Some("three".to_owned()));
 
-    assert!(cli2.noop().await.is_ok());
+    // It doesn't crash if it fails.
+    for _ in 0..10 {
+        assert!(cli2.panic().await.is_err());
+    }
+    assert_eq!(cli2.noop().await.unwrap(), Ok(true));
 }
