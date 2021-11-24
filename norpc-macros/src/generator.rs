@@ -99,7 +99,7 @@ fn generate_client_impl(svc: &Service) -> String {
 
         let f = format!(
             "
-		async fn {fun_name}({params}) -> Result<{output}, Svc::Error> {{
+		pub async fn {fun_name}({params}) -> Result<{output}, Svc::Error> {{
             norpc::poll_fn(|ctx| self.svc.poll_ready(ctx)).await.ok();
 			let rep = self.svc.call({}Request::{fun_name}({req_params})).await?;
 			match rep {{
