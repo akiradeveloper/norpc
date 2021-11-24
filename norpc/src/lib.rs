@@ -88,7 +88,7 @@ where
                 .await
                 .ok();
             let fut = self.service.call(inner);
-            tokio::spawn(async {
+            tokio::spawn(async move {
                 if let Ok(rep) = fut.await {
                     tx.send(rep).ok();
                 }
