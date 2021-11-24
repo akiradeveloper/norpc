@@ -56,25 +56,27 @@ async fn test_kvstore() {
         server.serve().await
     });
     let chan = norpc::ClientChannel::new(tx);
+
     let mut cli = KVStoreClient::new(chan);
-
+    // It doesn't crash if it fails.
+    for _ in 0..10000 {
+        assert!(cli.panic().await.is_err());
+    }
     assert_eq!(cli.read(1).await.unwrap(), None);
-
     cli.write(1, "one".to_owned()).await.unwrap();
     assert_eq!(cli.read(1).await.unwrap(), Some("one".to_owned()));
     assert_eq!(cli.read(2).await.unwrap(), None);
     assert_eq!(cli.read(3).await.unwrap(), None);
 
     let mut cli2 = cli.clone();
+    // It doesn't crash if it fails.
+    for _ in 0..10000 {
+        assert!(cli2.panic().await.is_err());
+    }
     let mut h = HashSet::new();
     h.insert((2, "two".to_owned()));
     h.insert((3, "three".to_owned()));
     cli2.write_many(h).await.unwrap();
     assert_eq!(cli2.read(3).await.unwrap(), Some("three".to_owned()));
-
-    // It doesn't crash if it fails.
-    for _ in 0..10 {
-        assert!(cli2.panic().await.is_err());
-    }
     assert_eq!(cli2.noop().await.unwrap(), Ok(true));
 }
