@@ -2,9 +2,12 @@ use tokio::sync::mpsc;
 use tower::Service;
 use tower::ServiceBuilder;
 
-norpc::include_code!("rate_limit");
-
 const N: usize = 10000;
+
+#[norpc::service]
+trait RateLimit {
+    fn noop() -> ();
+}
 
 #[derive(Clone)]
 struct RateLimitApp;

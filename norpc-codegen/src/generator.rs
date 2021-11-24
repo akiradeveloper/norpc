@@ -185,20 +185,15 @@ fn generate_server_impl(svc: &Service) -> String {
         svc_name = svc.name,
     )
 }
-pub(super) fn generate(services: Vec<Service>) -> String {
-    let mut out = String::new();
-    for svc in services {
-        let s = format!(
-            "{}{}{}{}{}{}{}",
-            generate_request(&svc),
-            generate_response(&svc),
-            generate_trait(&svc),
-            generate_client_struct(&svc),
-            generate_client_impl(&svc),
-            generate_server_struct(&svc),
-            generate_server_impl(&svc),
-        );
-        out.push_str(&s);
-    }
-    out
+pub(super) fn generate(svc: Service) -> String {
+    format!(
+        "{}{}{}{}{}{}{}",
+        generate_request(&svc),
+        generate_response(&svc),
+        generate_trait(&svc),
+        generate_client_struct(&svc),
+        generate_client_impl(&svc),
+        generate_server_struct(&svc),
+        generate_server_impl(&svc),
+    )
 }

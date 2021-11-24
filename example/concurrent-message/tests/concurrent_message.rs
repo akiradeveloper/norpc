@@ -7,7 +7,15 @@ use tokio::sync::RwLock;
 use tower::Service;
 use tower::ServiceBuilder;
 
-norpc::include_code!("concurrent_message");
+#[norpc::service]
+trait IdAlloc {
+    fn alloc(name: u64) -> u64;
+}
+#[norpc::service]
+trait IdStore {
+    fn save(name: u64, id: u64) -> ();
+    fn query(name: u64) -> Option<u64>;
+}
 
 #[derive(Clone)]
 struct IdAllocApp {

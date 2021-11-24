@@ -1,7 +1,0 @@
-service IdAlloc {
-    fn alloc(name: u64) -> u64;
-}
-service IdStore {
-    fn save(name: u64, id: u64) -> ();
-    fn query(name: u64) -> Option<u64>;
-}

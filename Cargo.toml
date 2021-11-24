@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "norpc",
+    "norpc-codegen",
     "example/hello-world",
     "example/kvstore",
     "example/concurrent-message",

@@ -1,7 +1,10 @@
 use tokio::sync::mpsc;
 use tower::Service;
 
-norpc::include_code!("hello_world");
+#[norpc::service]
+trait HelloWorld {
+    fn hello(s: String) -> String;
+}
 
 #[derive(Clone)]
 struct HelloWorldApp;

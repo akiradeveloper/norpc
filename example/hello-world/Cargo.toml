@@ -10,6 +10,3 @@ tokio = { version = "*", features = ["full"] }
 tower = { version = "*", features = ["full"] }
 
 norpc = { path = "../../norpc" }
-
-[build-dependencies]
-norpc = { path = "../../norpc" }

@@ -1,3 +1,0 @@
-service HelloWorld {
-    fn hello(s: String) -> String;
-}
