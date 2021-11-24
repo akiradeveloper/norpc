@@ -13,10 +13,7 @@ trait RateLimit {
 struct RateLimitApp;
 #[norpc::async_trait]
 impl RateLimit for RateLimitApp {
-    type Error = ();
-    async fn noop(self) -> Result<(), Self::Error> {
-        Ok(())
-    }
+    async fn noop(self) {}
 }
 #[tokio::test(flavor = "multi_thread")]
 async fn test_rate_limit() {

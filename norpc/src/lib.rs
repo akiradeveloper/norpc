@@ -9,40 +9,32 @@ pub use futures::future::poll_fn;
 pub use norpc_macros::service;
 
 #[derive(thiserror::Error, Debug)]
-pub enum TransportError {
+pub enum Error {
     #[error("failed to send a request")]
     SendError,
     #[error("failed to receive response")]
     RecvError,
 }
 
-#[derive(Debug)]
-pub enum Error<AppError> {
-    AppError(AppError),
-    TransportError(TransportError),
-}
-
 /// mpsc channel wrapper on the client-side.
-pub struct ClientChannel<X, Y, AppError> {
-    tx: mpsc::UnboundedSender<Request<X, Result<Y, AppError>>>,
+pub struct ClientChannel<X, Y> {
+    tx: mpsc::UnboundedSender<Request<X, Y>>,
 }
-impl<X, Y, AppError> ClientChannel<X, Y, AppError> {
-    pub fn new(tx: mpsc::UnboundedSender<Request<X, Result<Y, AppError>>>) -> Self {
+impl<X, Y> ClientChannel<X, Y> {
+    pub fn new(tx: mpsc::UnboundedSender<Request<X, Y>>) -> Self {
         Self { tx }
     }
 }
-impl<X, Y, AppError> Clone for ClientChannel<X, Y, AppError> {
+impl<X, Y> Clone for ClientChannel<X, Y> {
     fn clone(&self) -> Self {
         Self {
             tx: self.tx.clone(),
         }
     }
 }
-impl<X: 'static + Send, Y: 'static + Send, AppError: 'static + Send> Service<X>
-    for ClientChannel<X, Y, AppError>
-{
+impl<X: 'static + Send, Y: 'static + Send> Service<X> for ClientChannel<X, Y> {
     type Response = Y;
-    type Error = Error<AppError>;
+    type Error = Error;
     type Future =
         std::pin::Pin<Box<dyn std::future::Future<Output = Result<Y, Self::Error>> + Send>>;
 
@@ -56,17 +48,14 @@ impl<X: 'static + Send, Y: 'static + Send, AppError: 'static + Send> Service<X>
     fn call(&mut self, req: X) -> Self::Future {
         let tx = self.tx.clone();
         Box::pin(async move {
-            let (tx1, rx1) = oneshot::channel::<Result<Y, AppError>>();
+            let (tx1, rx1) = oneshot::channel::<Y>();
             let req = Request {
                 inner: req,
                 tx: tx1,
             };
-            tx.send(req)
-                .map_err(|_| Error::TransportError(TransportError::SendError))?;
-            let rep = rx1
-                .await
-                .map_err(|_| Error::TransportError(TransportError::RecvError))?;
-            rep.map_err(|e| Error::AppError(e))
+            tx.send(req).map_err(|_| Error::SendError)?;
+            let rep = rx1.await.map_err(|_| Error::RecvError)?;
+            Ok(rep)
         })
     }
 }
@@ -81,19 +70,15 @@ pub struct Request<X, Y> {
 /// mpsc channel wrapper on the server-side.
 pub struct ServerChannel<Req, Svc: Service<Req>> {
     service: Svc,
-    rx: mpsc::UnboundedReceiver<Request<Req, Result<Svc::Response, Svc::Error>>>,
+    rx: mpsc::UnboundedReceiver<Request<Req, Svc::Response>>,
 }
 impl<Req, Svc: Service<Req> + 'static + Send> ServerChannel<Req, Svc>
 where
     Req: 'static + Send,
     Svc::Future: Send,
     Svc::Response: Send,
-    Svc::Error: Send,
 {
-    pub fn new(
-        rx: mpsc::UnboundedReceiver<Request<Req, Result<Svc::Response, Svc::Error>>>,
-        service: Svc,
-    ) -> Self {
+    pub fn new(rx: mpsc::UnboundedReceiver<Request<Req, Svc::Response>>, service: Svc) -> Self {
         Self { service, rx }
     }
     pub async fn serve(mut self) {
@@ -104,8 +89,9 @@ where
                 .ok();
             let fut = self.service.call(inner);
             tokio::spawn(async {
-                let rep = fut.await;
-                tx.send(rep).ok();
+                if let Ok(rep) = fut.await {
+                    tx.send(rep).ok();
+                }
             });
         }
     }

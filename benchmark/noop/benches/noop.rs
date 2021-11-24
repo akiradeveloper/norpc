@@ -10,10 +10,8 @@ trait Noop {
 struct NoopApp;
 #[norpc::async_trait]
 impl Noop for NoopApp {
-    type Error = ();
-    async fn noop(self) -> Result<(), Self::Error> {
+    async fn noop(self) {
         // tokio::time::sleep(std::time::Duration::from_millis(10)).await;
-        Ok(())
     }
 }
 

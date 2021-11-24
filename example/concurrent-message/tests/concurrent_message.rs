@@ -20,10 +20,10 @@ trait IdStore {
 #[derive(Clone)]
 struct IdAllocApp {
     n: Arc<AtomicU64>,
-    id_store_cli: IdStoreClientT<()>,
+    id_store_cli: IdStoreClientT,
 }
 impl IdAllocApp {
-    fn new(id_store_cli: IdStoreClientT<()>) -> Self {
+    fn new(id_store_cli: IdStoreClientT) -> Self {
         Self {
             n: Arc::new(AtomicU64::new(1)),
             id_store_cli,
@@ -32,14 +32,13 @@ impl IdAllocApp {
 }
 #[norpc::async_trait]
 impl IdAlloc for IdAllocApp {
-    type Error = ();
-    async fn alloc(mut self, name: u64) -> Result<u64, Self::Error> {
+    async fn alloc(mut self, name: u64) -> u64 {
         let sleep_time = rand::random::<u64>() % 100;
         tokio::time::sleep(std::time::Duration::from_millis(sleep_time)).await;
         let id = self.n.fetch_add(1, Ordering::SeqCst);
-        let r: Result<(), norpc::Error<()>> = self.id_store_cli.save(name, id).await;
+        let r: Result<(), norpc::Error> = self.id_store_cli.save(name, id).await;
         assert!(r.is_ok());
-        Ok(name)
+        name
     }
 }
 
@@ -56,14 +55,11 @@ impl IdStoreApp {
 }
 #[norpc::async_trait]
 impl IdStore for IdStoreApp {
-    type Error = ();
-    async fn save(self, name: u64, id: u64) -> Result<(), Self::Error> {
+    async fn save(self, name: u64, id: u64) {
         self.map.write().await.insert(name, id);
-        Ok(())
     }
-    async fn query(self, name: u64) -> Result<Option<u64>, Self::Error> {
-        let id0 = self.map.read().await.get(&name).cloned();
-        Ok(id0)
+    async fn query(self, name: u64) -> Option<u64> {
+        self.map.read().await.get(&name).cloned()
     }
 }
 
