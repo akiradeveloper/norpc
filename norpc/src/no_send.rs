@@ -2,21 +2,7 @@ use tokio::sync::mpsc;
 use tokio::sync::oneshot;
 use tower_service::Service;
 
-pub mod no_send;
-
-// Re-exported for compiler
-pub use async_trait::async_trait;
-pub use futures::future::poll_fn;
-
-pub use norpc_macros::service;
-
-#[derive(thiserror::Error, Debug)]
-pub enum Error {
-    #[error("failed to send a request")]
-    SendError,
-    #[error("failed to receive response")]
-    RecvError,
-}
+use crate::{Request, Error};
 
 /// mpsc channel wrapper on the client-side.
 pub struct ClientChannel<X, Y> {
@@ -34,11 +20,11 @@ impl<X, Y> Clone for ClientChannel<X, Y> {
         }
     }
 }
-impl<X: 'static + Send, Y: 'static + Send> Service<X> for ClientChannel<X, Y> {
+impl<X: 'static, Y: 'static> Service<X> for ClientChannel<X, Y> {
     type Response = Y;
     type Error = Error;
     type Future =
-        std::pin::Pin<Box<dyn std::future::Future<Output = Result<Y, Self::Error>> + Send>>;
+        std::pin::Pin<Box<dyn std::future::Future<Output = Result<Y, Self::Error>>>>;
 
     fn poll_ready(
         &mut self,
@@ -62,24 +48,12 @@ impl<X: 'static + Send, Y: 'static + Send> Service<X> for ClientChannel<X, Y> {
     }
 }
 
-/// Pair of user defined request and
-/// a oneshot sender for the response.
-pub struct Request<X, Y> {
-    inner: X,
-    tx: oneshot::Sender<Y>,
-}
-
 /// mpsc channel wrapper on the server-side.
 pub struct ServerChannel<Req, Svc: Service<Req>> {
     service: Svc,
     rx: mpsc::UnboundedReceiver<Request<Req, Svc::Response>>,
 }
-impl<Req, Svc: Service<Req> + 'static + Send> ServerChannel<Req, Svc>
-where
-    Req: 'static + Send,
-    Svc::Future: Send,
-    Svc::Response: Send,
-{
+impl<Req: 'static, Svc: Service<Req> + 'static> ServerChannel<Req, Svc> {
     pub fn new(rx: mpsc::UnboundedReceiver<Request<Req, Svc::Response>>, service: Svc) -> Self {
         Self { service, rx }
     }
@@ -90,7 +64,7 @@ where
                 .await
                 .ok();
             let fut = self.service.call(inner);
-            tokio::spawn(async move {
+            tokio::task::spawn_local(async move {
                 if let Ok(rep) = fut.await {
                     tx.send(rep).ok();
                 }
