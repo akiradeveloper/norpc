@@ -7,5 +7,6 @@ members = [
     "example/concurrent-message",
     "example/rate-limit",
     "benchmark/noop",
+    "benchmark/noop-raw",
     "benchmark/noop-tarpc",
 ]
