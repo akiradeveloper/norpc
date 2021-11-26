@@ -76,13 +76,14 @@ impl Generator {
         }
         format!(
             "
-		#[norpc::async_trait]
+		#[norpc::async_trait{no_send}]
 		pub trait {svc_name}: Clone {{
 			{}
 		}}
 		",
             itertools::join(methods, ""),
             svc_name = svc.name,
+            no_send = if self.no_send { "(?Send)" } else { "" },
         )
     }
     fn generate_client_impl(&self, svc: &Service) -> String {
@@ -164,10 +165,10 @@ impl Generator {
 			Self {{ app }}
 		}}
 	}}
-    impl<App: {svc_name} + 'static + Send> tower::Service<{svc_name}Request> for {svc_name}Service<App> {{
+    impl<App: {svc_name} + 'static {no_send}> tower::Service<{svc_name}Request> for {svc_name}Service<App> {{
         type Response = {svc_name}Response;
         type Error = ();
-        type Future = std::pin::Pin<Box<dyn std::future::Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+        type Future = std::pin::Pin<Box<dyn std::future::Future<Output = Result<Self::Response, Self::Error>> {no_send}>>;
         fn poll_ready(
             &mut self,
             _: &mut std::task::Context<'_>,
@@ -186,6 +187,7 @@ impl Generator {
 	",
         itertools::join(match_arms, ","),
         svc_name = svc.name,
+        no_send = if self.no_send { "" } else { "+ Send" },
     )
     }
     pub(super) fn generate(&self, svc: Service) -> String {
