@@ -2,15 +2,35 @@ use proc_macro::TokenStream;
 use quote::quote;
 use std::str::FromStr;
 use syn::*;
+use syn::parse::{Parse, ParseStream, Result};
 
 mod generator;
 
+
+struct Args {
+    pub local: bool
+}
+
+mod kw {
+    syn::custom_keyword!(local);
+}
+
+impl Parse for Args {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let local: Option<kw::local> = input.parse()?;
+        Ok(Args {
+            local: local.is_some(),
+        })
+    }
+}
+
 #[proc_macro_attribute]
-pub fn service(_: TokenStream, item: TokenStream) -> TokenStream {
+pub fn service(args: TokenStream, item: TokenStream) -> TokenStream {
+    let args = parse_macro_input!(args as Args);
     let t = syn::parse::<ItemTrait>(item).unwrap();
     let svc = parse_service(&t);
     let generator = generator::Generator {
-        no_send: false,
+        no_send: args.local,
     };
     let code = generator.generate(svc);
     TokenStream::from_str(&code).unwrap()
