@@ -29,11 +29,12 @@ async fn test_rate_limit() {
     });
     let chan = norpc::ClientChannel::new(tx);
     let chan = ServiceBuilder::new()
+        .buffer(1)
         .rate_limit(1000, std::time::Duration::from_secs(1))
         .service(chan);
-    let mut cli = RateLimitClient::new(chan);
-
+    let cli = RateLimitClient::new(chan);
     for _ in 0..N {
+        let mut cli = cli.clone();
         cli.noop().await.unwrap();
     }
 }
