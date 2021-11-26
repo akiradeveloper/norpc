@@ -1,6 +1,6 @@
+use std::rc::Rc;
 use tokio::sync::mpsc;
 use tower::Service;
-use std::rc::Rc;
 
 #[norpc::service(?Send)]
 trait HelloWorld {
@@ -29,7 +29,10 @@ async fn test_hello_world_no_send() {
     local.spawn_local(async move {
         let chan = norpc::no_send::ClientChannel::new(tx);
         let mut cli = HelloWorldClient::new(chan);
-        assert_eq!(cli.hello("World".to_owned().into()).await.unwrap(), "Hello, World".to_string().into());
+        assert_eq!(
+            cli.hello("World".to_owned().into()).await.unwrap(),
+            "Hello, World".to_string().into()
+        );
     });
     local.await;
 }

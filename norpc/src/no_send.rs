@@ -2,7 +2,7 @@ use tokio::sync::mpsc;
 use tokio::sync::oneshot;
 use tower_service::Service;
 
-use crate::{Request, Error};
+use crate::{Error, Request};
 
 /// mpsc channel wrapper on the client-side.
 pub struct ClientChannel<X, Y> {
@@ -23,8 +23,7 @@ impl<X, Y> Clone for ClientChannel<X, Y> {
 impl<X: 'static, Y: 'static> Service<X> for ClientChannel<X, Y> {
     type Response = Y;
     type Error = Error;
-    type Future =
-        std::pin::Pin<Box<dyn std::future::Future<Output = Result<Y, Self::Error>>>>;
+    type Future = std::pin::Pin<Box<dyn std::future::Future<Output = Result<Y, Self::Error>>>>;
 
     fn poll_ready(
         &mut self,

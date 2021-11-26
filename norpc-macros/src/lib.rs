@@ -1,14 +1,13 @@
 use proc_macro::TokenStream;
 use quote::quote;
 use std::str::FromStr;
-use syn::*;
 use syn::parse::{Parse, ParseStream, Result};
+use syn::*;
 
 mod generator;
 
-
 struct Args {
-    pub local: bool
+    local: bool,
 }
 
 mod kw {
@@ -108,10 +107,10 @@ fn parse_func(f: &TraitItem) -> Function {
             match &sig.output {
                 ReturnType::Type(_, x) => {
                     output_ty = quote!(#x).to_string();
-                },
+                }
                 ReturnType::Default => {
                     output_ty = "()".to_string();
-                },
+                }
             }
             Function {
                 name: func_name,
