@@ -2,6 +2,8 @@ use tokio::sync::mpsc;
 use tokio::sync::oneshot;
 use tower_service::Service;
 
+/// non-Send support.
+/// `#[service(?Send)]` generates non-Send futures.
 pub mod no_send;
 
 // Re-exported for compiler
