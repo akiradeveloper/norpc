@@ -9,7 +9,10 @@ mod generator;
 pub fn service(_: TokenStream, item: TokenStream) -> TokenStream {
     let t = syn::parse::<ItemTrait>(item).unwrap();
     let svc = parse_service(&t);
-    let code = generator::generate(svc);
+    let generator = generator::Generator {
+        no_send: false,
+    };
+    let code = generator.generate(svc);
     TokenStream::from_str(&code).unwrap()
 }
 
