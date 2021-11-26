@@ -12,15 +12,23 @@ struct Args {
 }
 
 mod kw {
-    syn::custom_keyword!(local);
+    syn::custom_keyword!(Send);
+}
+
+fn try_parse(input: ParseStream) -> Result<Args> {
+    if input.peek(Token![?]) {
+        input.parse::<Token![?]>()?;
+        input.parse::<kw::Send>()?;
+        Ok(Args { local: true })
+    } else {
+        Ok(Args { local: false })
+    }
 }
 
 impl Parse for Args {
     fn parse(input: ParseStream) -> Result<Self> {
-        let local: Option<kw::local> = input.parse()?;
-        Ok(Args {
-            local: local.is_some(),
-        })
+        let args: Args = try_parse(input)?;
+        Ok(args)
     }
 }
 

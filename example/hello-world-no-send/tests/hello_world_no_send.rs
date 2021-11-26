@@ -2,7 +2,7 @@ use tokio::sync::mpsc;
 use tower::Service;
 use std::rc::Rc;
 
-#[norpc::service(local)]
+#[norpc::service(?Send)]
 trait HelloWorld {
     // Rc<T> is !Send
     fn hello(s: Rc<String>) -> Rc<String>;
