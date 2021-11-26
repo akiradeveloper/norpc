@@ -1,16 +1,43 @@
 use proc_macro::TokenStream;
 use quote::quote;
 use std::str::FromStr;
+use syn::parse::{Parse, ParseStream, Result};
 use syn::*;
 
 mod generator;
 
+struct Args {
+    local: bool,
+}
+
+mod kw {
+    syn::custom_keyword!(Send);
+}
+
+fn try_parse(input: ParseStream) -> Result<Args> {
+    if input.peek(Token![?]) {
+        input.parse::<Token![?]>()?;
+        input.parse::<kw::Send>()?;
+        Ok(Args { local: true })
+    } else {
+        Ok(Args { local: false })
+    }
+}
+
+impl Parse for Args {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let args: Args = try_parse(input)?;
+        Ok(args)
+    }
+}
+
 #[proc_macro_attribute]
-pub fn service(_: TokenStream, item: TokenStream) -> TokenStream {
+pub fn service(args: TokenStream, item: TokenStream) -> TokenStream {
+    let args = parse_macro_input!(args as Args);
     let t = syn::parse::<ItemTrait>(item).unwrap();
     let svc = parse_service(&t);
     let generator = generator::Generator {
-        no_send: false,
+        no_send: args.local,
     };
     let code = generator.generate(svc);
     TokenStream::from_str(&code).unwrap()
@@ -80,10 +107,10 @@ fn parse_func(f: &TraitItem) -> Function {
             match &sig.output {
                 ReturnType::Type(_, x) => {
                     output_ty = quote!(#x).to_string();
-                },
+                }
                 ReturnType::Default => {
                     output_ty = "()".to_string();
-                },
+                }
             }
             Function {
                 name: func_name,
