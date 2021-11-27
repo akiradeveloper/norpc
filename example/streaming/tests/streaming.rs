@@ -5,7 +5,7 @@ use tower::Service;
 
 #[norpc::service]
 trait BidiStreaming {
-    fn double(input: u64) -> u64;
+    fn double(input: Stream<u64>) -> Stream<u64>;
 }
 #[derive(Clone)]
 struct BidiApp;

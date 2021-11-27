@@ -1,4 +1,5 @@
 use proc_macro::TokenStream;
+use proc_macro2::*;
 use quote::quote;
 use std::str::FromStr;
 use syn::parse::{Parse, ParseStream, Result};
@@ -76,6 +77,25 @@ fn parse_service(t: &ItemTrait) -> Service {
         functions,
     }
 }
+enum StreamType {
+    Stream(String),
+    Unit(String),
+}
+fn parse_type(ty: &Type) -> StreamType {
+    let ty = quote!(#ty).to_string();
+    let ty = syn::parse_str::<PathSegment>(&ty).unwrap();
+    if ty.ident == Ident::new("Stream", Span::call_site()) {
+        let braket = ty.arguments;
+        let inner = match braket {
+            PathArguments::AngleBracketed(AngleBracketedGenericArguments { args, .. }) => args,
+            _ => unreachable!(),
+        };
+        StreamType::Stream(quote!(#inner).to_string())
+    } else {
+        let ident = ty.ident;
+        StreamType::Unit(quote!(#ident).to_string())
+    }
+}
 fn parse_func(f: &TraitItem) -> Function {
     match f {
         TraitItem::Method(m) => {
@@ -83,6 +103,9 @@ fn parse_func(f: &TraitItem) -> Function {
 
             let x = &sig.ident;
             let func_name = quote!(#x).to_string();
+
+            let mut client_streaming = false;
+            let mut server_streaming = false;
 
             let mut inputs = vec![];
             for input in &sig.inputs {
@@ -94,7 +117,13 @@ fn parse_func(f: &TraitItem) -> Function {
                         };
                         let var_type = {
                             let x = &p.ty;
-                            quote!(#x).to_string()
+                            match parse_type(&x) {
+                                StreamType::Stream(t) => {
+                                    client_streaming = true;
+                                    t
+                                }
+                                StreamType::Unit(t) => t,
+                            }
                         };
                         inputs.push(Parameter {
                             var_name,
@@ -108,7 +137,13 @@ fn parse_func(f: &TraitItem) -> Function {
             let output_ty;
             match &sig.output {
                 ReturnType::Type(_, x) => {
-                    output_ty = quote!(#x).to_string();
+                    output_ty = match parse_type(&x) {
+                        StreamType::Stream(t) => {
+                            server_streaming = true;
+                            t
+                        }
+                        StreamType::Unit(t) => t,
+                    }
                 }
                 ReturnType::Default => {
                     output_ty = "()".to_string();
@@ -118,8 +153,8 @@ fn parse_func(f: &TraitItem) -> Function {
                 name: func_name,
                 inputs,
                 output: output_ty,
-                client_streaming: true,
-                server_streaming: true,
+                client_streaming,
+                server_streaming,
             }
         }
         // TODO ignore here to skip comments
