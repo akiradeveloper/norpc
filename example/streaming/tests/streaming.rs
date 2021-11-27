@@ -1,5 +1,5 @@
 use futures::stream::StreamExt;
-use std::pin::Pin;
+use futures::stream::{BoxStream, LocalBoxStream};
 use tokio::sync::mpsc;
 use tower::Service;
 
@@ -11,10 +11,7 @@ trait BidiStreaming {
 struct BidiStreamingApp;
 #[norpc::async_trait]
 impl BidiStreaming for BidiStreamingApp {
-    async fn double(
-        self,
-        st: Pin<Box<(dyn futures::Stream<Item = u64> + std::marker::Send + 'static)>>,
-    ) -> Pin<Box<(dyn futures::Stream<Item = u64> + std::marker::Send + 'static)>> {
+    async fn double(self, st: BoxStream<'static, u64>) -> BoxStream<'static, u64> {
         Box::pin(st.map(|x| {
             if x == 3 {
                 panic!();
@@ -42,6 +39,42 @@ async fn test_bidi_streaming() {
     ret_stream.next().await;
 }
 
+#[norpc::service(?Send)]
+trait BidiStreamingLocal {
+    fn double(input: Stream<u64>) -> Stream<u64>;
+}
+#[derive(Clone)]
+struct BidiStreamingLocalApp;
+#[norpc::async_trait(?Send)]
+impl BidiStreamingLocal for BidiStreamingLocalApp {
+    async fn double(self, st: LocalBoxStream<'static, u64>) -> LocalBoxStream<'static, u64> {
+        Box::pin(st.map(|x| {
+            let y = 2 * x;
+            y
+        }))
+    }
+}
+#[tokio::test(flavor = "multi_thread")]
+async fn test_bidi_streaming_local() {
+    let local = tokio::task::LocalSet::new();
+    let (tx, rx) = mpsc::unbounded_channel();
+    local.spawn_local(async move {
+        let app = BidiStreamingLocalApp;
+        let service = BidiStreamingLocalService::new(app);
+        let server = norpc::no_send::ServerChannel::new(rx, service);
+        server.serve().await
+    });
+    local.spawn_local(async move {
+        let chan = norpc::no_send::ClientChannel::new(tx);
+        let mut cli = BidiStreamingLocalClient::new(chan);
+        let inp_stream = Box::pin(futures::stream::iter([1, 2, 3]));
+        let mut ret_stream = cli.double(inp_stream).await.unwrap();
+        assert_eq!(ret_stream.next().await, Some(2));
+        assert_eq!(ret_stream.next().await, Some(4));
+        assert_eq!(ret_stream.next().await, Some(6));
+    });
+    local.await;
+}
 
 #[norpc::service]
 trait ServerStreaming {
@@ -51,10 +84,7 @@ trait ServerStreaming {
 struct ServerStreamingApp;
 #[norpc::async_trait]
 impl ServerStreaming for ServerStreamingApp {
-    async fn double(
-        self,
-        x: u64,
-    ) -> Pin<Box<(dyn futures::Stream<Item = u64> + std::marker::Send + 'static)>> {
+    async fn double(self, x: u64) -> BoxStream<'static, u64> {
         let st = async_stream::stream! {
             for i in x..x+3 {
                 yield i*2;

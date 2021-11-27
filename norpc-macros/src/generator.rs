@@ -1,20 +1,20 @@
 use super::Service;
 
-fn streamify(ty: &str, yes: bool) -> String {
-    if yes {
-        format!(
-            "Pin<Box<dyn futures::stream::Stream<Item = {}> + Send + 'static>>",
-            ty
-        )
-    } else {
-        format!("{}", ty)
-    }
-}
-
 pub struct Generator {
     pub no_send: bool,
 }
 impl Generator {
+    fn streamify(&self, ty: &str, yes: bool) -> String {
+        if yes {
+            if self.no_send {
+                format!("LocalBoxStream<'static, {}>", ty)
+            } else {
+                format!("BoxStream<'static, {}>", ty)
+            }
+        } else {
+            format!("{}", ty)
+        }
+    }
     fn generate_request(&self, svc: &Service) -> String {
         let mut variants = vec![];
         for fun in &svc.functions {
@@ -25,7 +25,7 @@ impl Generator {
             variants.push(format!(
                 "{}({})",
                 fun.name,
-                streamify(&itertools::join(params, ","), fun.client_streaming)
+                self.streamify(&itertools::join(params, ","), fun.client_streaming)
             ));
         }
         format!(
@@ -44,7 +44,7 @@ impl Generator {
             variants.push(format!(
                 "{}({})",
                 fun.name,
-                streamify(&fun.output, fun.server_streaming)
+                self.streamify(&fun.output, fun.server_streaming)
             ));
         }
         format!(
@@ -88,7 +88,7 @@ impl Generator {
                 params.push(format!(
                     "{}:{}",
                     param.var_name,
-                    streamify(&param.typ_name, fun.client_streaming)
+                    self.streamify(&param.typ_name, fun.client_streaming)
                 ));
             }
             let params = itertools::join(params, ",");
@@ -96,7 +96,7 @@ impl Generator {
                 "async fn {}({}) -> {};",
                 fun.name,
                 &params,
-                streamify(&fun.output, fun.server_streaming)
+                self.streamify(&fun.output, fun.server_streaming)
             ));
         }
         format!(
@@ -119,7 +119,7 @@ impl Generator {
                 params.push(format!(
                     "{}:{}",
                     p.var_name,
-                    streamify(&p.typ_name, fun.client_streaming)
+                    self.streamify(&p.typ_name, fun.client_streaming)
                 ));
             }
             let params = itertools::join(params, ",");
@@ -145,7 +145,7 @@ impl Generator {
                 svc_name = svc.name,
                 fun_name = fun.name,
                 params = params,
-                output = streamify(&fun.output, fun.server_streaming),
+                output = self.streamify(&fun.output, fun.server_streaming),
                 req_params = req_params,
             );
             methods.push(f);
