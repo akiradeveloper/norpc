@@ -92,8 +92,7 @@ fn parse_type(ty: &Type) -> StreamType {
         };
         StreamType::Stream(quote!(#inner).to_string())
     } else {
-        let ident = ty.ident;
-        StreamType::Unit(quote!(#ident).to_string())
+        StreamType::Unit(quote!(#ty).to_string())
     }
 }
 fn parse_func(f: &TraitItem) -> Function {
