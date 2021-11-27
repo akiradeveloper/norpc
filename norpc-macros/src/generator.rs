@@ -4,6 +4,17 @@ pub struct Generator {
     pub no_send: bool,
 }
 impl Generator {
+    fn streamify(&self, ty: &str, yes: bool) -> String {
+        if yes {
+            if self.no_send {
+                format!("LocalBoxStream<'static, {}>", ty)
+            } else {
+                format!("BoxStream<'static, {}>", ty)
+            }
+        } else {
+            format!("{}", ty)
+        }
+    }
     fn generate_request(&self, svc: &Service) -> String {
         let mut variants = vec![];
         for fun in &svc.functions {
@@ -11,7 +22,11 @@ impl Generator {
             for param in &fun.inputs {
                 params.push(param.typ_name.clone());
             }
-            variants.push(format!("{}({})", fun.name, itertools::join(params, ",")));
+            variants.push(format!(
+                "{}({})",
+                fun.name,
+                self.streamify(&itertools::join(params, ","), fun.client_streaming)
+            ));
         }
         format!(
             "
@@ -26,7 +41,11 @@ impl Generator {
     fn generate_response(&self, svc: &Service) -> String {
         let mut variants = vec![];
         for fun in &svc.functions {
-            variants.push(format!("{}({})", fun.name, fun.output));
+            variants.push(format!(
+                "{}({})",
+                fun.name,
+                self.streamify(&fun.output, fun.server_streaming)
+            ));
         }
         format!(
             "
@@ -66,12 +85,18 @@ impl Generator {
         for fun in &svc.functions {
             let mut params = vec!["self".to_owned()];
             for param in &fun.inputs {
-                params.push(format!("{}:{}", param.var_name, param.typ_name));
+                params.push(format!(
+                    "{}:{}",
+                    param.var_name,
+                    self.streamify(&param.typ_name, fun.client_streaming)
+                ));
             }
             let params = itertools::join(params, ",");
             methods.push(format!(
                 "async fn {}({}) -> {};",
-                fun.name, params, fun.output
+                fun.name,
+                &params,
+                self.streamify(&fun.output, fun.server_streaming)
             ));
         }
         format!(
@@ -91,7 +116,11 @@ impl Generator {
         for fun in &svc.functions {
             let mut params = vec!["&mut self".to_owned()];
             for p in &fun.inputs {
-                params.push(format!("{}:{}", p.var_name, p.typ_name));
+                params.push(format!(
+                    "{}:{}",
+                    p.var_name,
+                    self.streamify(&p.typ_name, fun.client_streaming)
+                ));
             }
             let params = itertools::join(params, ",");
 
@@ -116,7 +145,7 @@ impl Generator {
                 svc_name = svc.name,
                 fun_name = fun.name,
                 params = params,
-                output = fun.output,
+                output = self.streamify(&fun.output, fun.server_streaming),
                 req_params = req_params,
             );
             methods.push(f);
