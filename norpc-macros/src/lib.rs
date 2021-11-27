@@ -53,6 +53,8 @@ struct Function {
     name: String,
     inputs: Vec<Parameter>,
     output: String,
+    client_streaming: bool,
+    server_streaming: bool,
 }
 #[derive(Debug)]
 struct Parameter {
@@ -116,6 +118,8 @@ fn parse_func(f: &TraitItem) -> Function {
                 name: func_name,
                 inputs,
                 output: output_ty,
+                client_streaming: true,
+                server_streaming: true,
             }
         }
         // TODO ignore here to skip comments
