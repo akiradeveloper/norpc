@@ -1,6 +1,6 @@
+use std::rc::Rc;
 use tokio::sync::mpsc;
 use tower::Service;
-use std::rc::Rc;
 
 #[norpc::service]
 trait HelloWorld {
