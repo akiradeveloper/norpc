@@ -3,7 +3,6 @@ members = [
     "norpc",
     "norpc-macros",
     "example/hello-world",
-    "example/hello-world-no-send",
     "example/kvstore",
     "example/concurrency",
     "example/rate-limit",
