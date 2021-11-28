@@ -15,7 +15,6 @@ keywords = ["rpc", "microservices", "async"]
 [dependencies]
 tokio = { version = "1", features = ["sync", "rt"] }
 tower-service = "0.3"
-tower = "0.4"
 async-trait = "0.1"
 futures = "0.3"
 thiserror = "1"
