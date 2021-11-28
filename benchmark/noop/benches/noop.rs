@@ -18,18 +18,19 @@ impl Noop for NoopApp {
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 
 fn bench_noop(c: &mut Criterion) {
+    use norpc::runtime::*;
     let rt = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
         .unwrap();
-    let (tx, rx) = mpsc::unbounded_channel();
+    let (tx, rx) = mpsc::channel(100);
     rt.spawn(async move {
         let app = NoopApp;
         let service = NoopService::new(app);
-        let server = norpc::ServerChannel::new(rx, service);
+        let server = send::Executor::new(rx, service);
         server.serve().await
     });
-    let chan = norpc::ClientChannel::new(tx);
+    let chan = send::ClientService::new(tx);
     let cli = NoopClient::new(chan);
     c.bench_with_input(BenchmarkId::new("noop request", 1), &cli, |b, cli| {
         b.to_async(&rt).iter(|| async {

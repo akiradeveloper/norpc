@@ -1,5 +1,4 @@
 use tokio::sync::mpsc;
-use tower::Service;
 use tower::ServiceBuilder;
 
 const N: usize = 10000;
@@ -17,17 +16,18 @@ impl RateLimit for RateLimitApp {
 }
 #[tokio::test(flavor = "multi_thread")]
 async fn test_rate_limit() {
-    let (tx, rx) = mpsc::unbounded_channel();
+    use norpc::runtime::send::*;
+    let (tx, rx) = mpsc::channel(1 << 60);
     tokio::spawn(async move {
         let app = RateLimitApp;
         let service = RateLimitService::new(app);
         let service = ServiceBuilder::new()
             .rate_limit(5000, std::time::Duration::from_secs(1))
             .service(service);
-        let server = norpc::ServerChannel::new(rx, service);
+        let server = Executor::new(rx, service);
         server.serve().await
     });
-    let chan = norpc::ClientChannel::new(tx);
+    let chan = ClientService::new(tx);
     let chan = ServiceBuilder::new()
         .buffer(1)
         .rate_limit(1000, std::time::Duration::from_secs(1))

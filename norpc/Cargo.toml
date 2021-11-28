@@ -13,10 +13,17 @@ keywords = ["rpc", "microservices", "async"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tokio = { version = "1", features = ["sync", "rt"] }
+norpc-macros = { path = "../norpc-macros", version = "0.5.2" }
 tower-service = "0.3"
 async-trait = "0.1"
 futures = "0.3"
-thiserror = "1"
 
-norpc-macros = { path = "../norpc-macros", version = "0.5.2" }
+tokio = { version = "1", features = ["sync", "rt"], optional = true }
+thiserror = { version = "1", optional = true }
+
+[features]
+runtime = ["tokio", "thiserror"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

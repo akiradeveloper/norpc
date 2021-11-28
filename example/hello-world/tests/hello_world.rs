@@ -1,6 +1,5 @@
 use std::rc::Rc;
 use tokio::sync::mpsc;
-use tower::Service;
 
 #[norpc::service]
 trait HelloWorld {
@@ -16,14 +15,15 @@ impl HelloWorld for HelloWorldApp {
 }
 #[tokio::test(flavor = "multi_thread")]
 async fn test_hello_world() {
-    let (tx, rx) = mpsc::unbounded_channel();
+    use norpc::runtime::send::*;
+    let (tx, rx) = mpsc::channel(100);
     tokio::spawn(async move {
         let app = HelloWorldApp;
         let service = HelloWorldService::new(app);
-        let server = norpc::ServerChannel::new(rx, service);
+        let server = Executor::new(rx, service);
         server.serve().await
     });
-    let chan = norpc::ClientChannel::new(tx);
+    let chan = ClientService::new(tx);
     let mut cli = HelloWorldClient::new(chan);
     assert_eq!(cli.hello("World".to_owned()).await.unwrap(), "Hello, World");
 }
@@ -43,16 +43,17 @@ impl HelloWorldLocal for HelloWorldLocalApp {
 }
 #[tokio::test(flavor = "multi_thread")]
 async fn test_hello_world_no_send() {
+    use norpc::runtime::no_send::*;
     let local = tokio::task::LocalSet::new();
-    let (tx, rx) = mpsc::unbounded_channel();
+    let (tx, rx) = mpsc::channel(100);
     local.spawn_local(async move {
         let app = HelloWorldLocalApp;
         let service = HelloWorldLocalService::new(app);
-        let server = norpc::no_send::ServerChannel::new(rx, service);
+        let server = Executor::new(rx, service);
         server.serve().await
     });
     local.spawn_local(async move {
-        let chan = norpc::no_send::ClientChannel::new(tx);
+        let chan = ClientService::new(tx);
         let mut cli = HelloWorldLocalClient::new(chan);
         assert_eq!(
             cli.hello("World".to_owned().into()).await.unwrap(),

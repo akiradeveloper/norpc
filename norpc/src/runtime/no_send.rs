@@ -2,25 +2,24 @@ use tokio::sync::mpsc;
 use tokio::sync::oneshot;
 use tower_service::Service;
 
-use crate::{Error, Request};
+use super::{Error, Request};
 
-/// mpsc channel wrapper on the client-side.
-pub struct ClientChannel<X, Y> {
-    tx: mpsc::UnboundedSender<Request<X, Y>>,
+pub struct ClientService<X, Y> {
+    tx: mpsc::Sender<Request<X, Y>>,
 }
-impl<X, Y> ClientChannel<X, Y> {
-    pub fn new(tx: mpsc::UnboundedSender<Request<X, Y>>) -> Self {
-        Self { tx }
+impl<X, Y> ClientService<X, Y> {
+    pub fn new(tx: mpsc::Sender<Request<X, Y>>) -> Self {
+        Self { tx: tx }
     }
 }
-impl<X, Y> Clone for ClientChannel<X, Y> {
+impl<X, Y> Clone for ClientService<X, Y> {
     fn clone(&self) -> Self {
         Self {
             tx: self.tx.clone(),
         }
     }
 }
-impl<X: 'static, Y: 'static> Service<X> for ClientChannel<X, Y> {
+impl<X: 'static, Y: 'static> Service<X> for ClientService<X, Y> {
     type Response = Y;
     type Error = Error;
     type Future = std::pin::Pin<Box<dyn std::future::Future<Output = Result<Y, Self::Error>>>>;
@@ -40,26 +39,25 @@ impl<X: 'static, Y: 'static> Service<X> for ClientChannel<X, Y> {
                 inner: req,
                 tx: tx1,
             };
-            tx.send(req).map_err(|_| Error::SendError)?;
-            let rep = rx1.await.map_err(|_| Error::RecvError)?;
+            tx.send(req).await.map_err(|_| Error::SendClosed)?;
+            let rep = rx1.await.map_err(|_| Error::RecvClosed)?;
             Ok(rep)
         })
     }
 }
 
-/// mpsc channel wrapper on the server-side.
-pub struct ServerChannel<Req, Svc: Service<Req>> {
+pub struct Executor<X, Svc: Service<X>> {
     service: Svc,
-    rx: mpsc::UnboundedReceiver<Request<Req, Svc::Response>>,
+    rx: mpsc::Receiver<Request<X, Svc::Response>>,
 }
-impl<Req: 'static, Svc: Service<Req> + 'static> ServerChannel<Req, Svc> {
-    pub fn new(rx: mpsc::UnboundedReceiver<Request<Req, Svc::Response>>, service: Svc) -> Self {
-        Self { service, rx }
+impl<X: 'static, Svc: Service<X> + 'static> Executor<X, Svc> {
+    pub fn new(rx: mpsc::Receiver<Request<X, Svc::Response>>, service: Svc) -> Self {
+        Self { service, rx: rx }
     }
     pub async fn serve(mut self) {
         while let Some(Request { tx, inner }) = self.rx.recv().await {
-            // back-pressure
-            futures::future::poll_fn(|ctx| self.service.poll_ready(ctx))
+            // backpressure
+            crate::poll_fn(|ctx| self.service.poll_ready(ctx))
                 .await
                 .ok();
             let fut = self.service.call(inner);
