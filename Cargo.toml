@@ -5,7 +5,7 @@ members = [
     "example/hello-world",
     "example/hello-world-no-send",
     "example/kvstore",
-    "example/concurrent-message",
+    "example/concurrency",
     "example/rate-limit",
     "example/streaming",
     "benchmark/noop",
