@@ -1,6 +1,6 @@
 [package]
 name = "norpc"
-version = "0.5.1"
+version = "0.5.2"
 authors = ["Akira Hayakawa <ruby.wktk@gmail.com>"]
 edition = "2021"
 license = "MIT"
@@ -19,4 +19,4 @@ async-trait = "0.1"
 futures = "0.3"
 thiserror = "1"
 
-norpc-macros = { path = "../norpc-macros", version = "0.5.1" }
+norpc-macros = { path = "../norpc-macros", version = "0.5.2" }
