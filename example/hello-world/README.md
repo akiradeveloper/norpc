@@ -10,7 +10,7 @@ gives you an ability to write any extensive applications.
 
 First, you have to define your service. The service is a set of functions.
 
-```
+```rust
 #[norpc::service]
 trait HelloWorld {
     fn hello(s: String) -> String;
@@ -43,11 +43,11 @@ First, create a `mpsc::unbounded_channel` to connect the server and clients.
 Then, feed the `Receiver` side to the server-side and start the event loop.
 
 ```rust
-    let (tx, rx) = mpsc::unbounded_channel();
+    let (tx, rx) = mpsc::channel(100);
     tokio::spawn(async move {
         let app = HelloWorldApp;
-        let service = HelloWorldService::new(app); // HelloWorldService is auto-generated
-        let server = norpc::ServerChannel::new(rx, service);
+        let service = HelloWorldService::new(app);
+        let server = Executor::new(rx, service);
         server.serve().await
     });
 
@@ -58,9 +58,7 @@ Then, feed the `Receiver` side to the server-side and start the event loop.
 To access the server from a client, use the `Sender` side of the channel.
 
 ```rust
-    let chan = norpc::ClientChannel::new(tx);
-    let mut cli = HelloWorldClient::new(chan); // HelloWorldClient is auto-generated
+    let chan = ClientService::new(tx);
+    let mut cli = HelloWorldClient::new(chan);
     assert_eq!(cli.hello("World".to_owned()).await.unwrap(), "Hello, World");
 ```
-
-The client is auto-generated and each function has return type `Result<T, norpc::Error>`.
