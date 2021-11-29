@@ -2,7 +2,6 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::sync::RwLock;
-use tower::Service;
 
 #[norpc::service]
 trait KVStore {
@@ -48,14 +47,15 @@ impl KVStore for KVStoreApp {
 }
 #[tokio::test(flavor = "multi_thread")]
 async fn test_kvstore() {
-    let (tx, rx) = mpsc::unbounded_channel();
+    use norpc::runtime::send::*;
+    let (tx, rx) = mpsc::channel(100);
     tokio::spawn(async move {
         let app = KVStoreApp::new();
         let service = KVStoreService::new(app);
-        let server = norpc::ServerChannel::new(rx, service);
+        let server = Executor::new(rx, service);
         server.serve().await
     });
-    let chan = norpc::ClientChannel::new(tx);
+    let chan = ClientService::new(tx);
 
     let mut cli = KVStoreClient::new(chan);
     // It doesn't crash if it fails.

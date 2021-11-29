@@ -4,7 +4,6 @@ use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::sync::RwLock;
-use tower::Service;
 use tower::ServiceBuilder;
 
 #[norpc::service]
@@ -17,6 +16,8 @@ trait IdStore {
     fn query(name: u64) -> Option<u64>;
 }
 
+type IdStoreClientService = norpc::runtime::send::ClientService<IdStoreRequest, IdStoreResponse>;
+type IdStoreClientT = IdStoreClient<IdStoreClientService>;
 #[derive(Clone)]
 struct IdAllocApp {
     n: Arc<AtomicU64>,
@@ -36,7 +37,7 @@ impl IdAlloc for IdAllocApp {
         let sleep_time = rand::random::<u64>() % 100;
         tokio::time::sleep(std::time::Duration::from_millis(sleep_time)).await;
         let id = self.n.fetch_add(1, Ordering::SeqCst);
-        let r: Result<(), norpc::Error> = self.id_store_cli.save(name, id).await;
+        let r: Result<(), norpc::runtime::Error> = self.id_store_cli.save(name, id).await;
         assert!(r.is_ok());
         name
     }
@@ -67,17 +68,18 @@ const N: u64 = 10000;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_concurrent_message() {
-    let (tx, rx) = mpsc::unbounded_channel();
+    use norpc::runtime::send::*;
+    let (tx, rx) = mpsc::channel(1 << 60);
     tokio::spawn(async move {
         let app = IdStoreApp::new();
         let service = IdStoreService::new(app);
-        let server = norpc::ServerChannel::new(rx, service);
+        let server = Executor::new(rx, service);
         server.serve().await
     });
-    let chan = norpc::ClientChannel::new(tx);
+    let chan = ClientService::new(tx);
     let mut id_store_cli = IdStoreClient::new(chan);
 
-    let (tx, rx) = mpsc::unbounded_channel();
+    let (tx, rx) = mpsc::channel(1 << 60);
     let id_store_cli_cln = id_store_cli.clone();
     tokio::spawn(async move {
         let app = IdAllocApp::new(id_store_cli_cln);
@@ -86,10 +88,10 @@ async fn test_concurrent_message() {
             // Changing this value will see a different complete time.
             .concurrency_limit(100)
             .service(service);
-        let server = norpc::ServerChannel::new(rx, service);
+        let server = Executor::new(rx, service);
         server.serve().await
     });
-    let chan = norpc::ClientChannel::new(tx);
+    let chan = ClientService::new(tx);
     let id_alloc_cli = IdAllocClient::new(chan);
 
     let mut queue = futures::stream::FuturesUnordered::new();

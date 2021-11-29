@@ -59,15 +59,14 @@ impl Generator {
     }
     fn generate_client_struct(&self, svc: &Service) -> String {
         format!(
-        "
+            "
     #[derive(Clone)]
 	pub struct {svc_name}Client<Svc> {{
 		svc: Svc
 	}}
-    pub type {svc_name}ClientT = {svc_name}Client<norpc::ClientChannel<{svc_name}Request, {svc_name}Response>>;
 	",
-        svc_name = svc.name
-    )
+            svc_name = svc.name,
+        )
     }
     fn generate_server_struct(&self, svc: &Service) -> String {
         format!(
@@ -152,7 +151,7 @@ impl Generator {
         }
         format!(
             "
-	impl<Svc: Service<{svc_name}Request, Response = {svc_name}Response>> {svc_name}Client<Svc> {{
+	impl<Svc: norpc::Service<{svc_name}Request, Response = {svc_name}Response>> {svc_name}Client<Svc> {{
 		pub fn new(svc: Svc) -> Self {{
 			Self {{ svc }}
 		}}
@@ -194,7 +193,7 @@ impl Generator {
 			Self {{ app }}
 		}}
 	}}
-    impl<App: {svc_name} + 'static {no_send}> tower::Service<{svc_name}Request> for {svc_name}Service<App> {{
+    impl<App: {svc_name} + 'static {no_send}> norpc::Service<{svc_name}Request> for {svc_name}Service<App> {{
         type Response = {svc_name}Response;
         type Error = ();
         type Future = std::pin::Pin<Box<dyn std::future::Future<Output = Result<Self::Response, Self::Error>> {no_send}>>;
