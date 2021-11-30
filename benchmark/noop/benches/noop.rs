@@ -27,7 +27,7 @@ fn bench_noop(c: &mut Criterion) {
     rt.spawn(async move {
         let app = NoopApp;
         let service = NoopService::new(app);
-        let server = send::Executor::new(rx, service);
+        let server = send::ServerExecutor::new(rx, service);
         server.serve().await
     });
     let chan = send::ClientService::new(tx);

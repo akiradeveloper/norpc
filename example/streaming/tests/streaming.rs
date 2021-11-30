@@ -27,7 +27,7 @@ async fn test_bidi_streaming() {
     tokio::spawn(async move {
         let app = BidiStreamingApp;
         let service = BidiStreamingService::new(app);
-        let server = Executor::new(rx, service);
+        let server = ServerExecutor::new(rx, service);
         server.serve().await
     });
     let chan = ClientService::new(tx);
@@ -62,7 +62,7 @@ async fn test_bidi_streaming_local() {
     local.spawn_local(async move {
         let app = BidiStreamingLocalApp;
         let service = BidiStreamingLocalService::new(app);
-        let server = Executor::new(rx, service);
+        let server = ServerExecutor::new(rx, service);
         server.serve().await
     });
     local.spawn_local(async move {
@@ -101,7 +101,7 @@ async fn test_server_streaming() {
     tokio::spawn(async move {
         let app = ServerStreamingApp;
         let service = ServerStreamingService::new(app);
-        let server = Executor::new(rx, service);
+        let server = ServerExecutor::new(rx, service);
         server.serve().await
     });
     let chan = ClientService::new(tx);

@@ -46,11 +46,11 @@ impl<X: 'static + Send, Y: 'static + Send> crate::Service<X> for ClientService<X
     }
 }
 
-pub struct Executor<X, Svc: crate::Service<X>> {
+pub struct ServerExecutor<X, Svc: crate::Service<X>> {
     service: Svc,
     rx: mpsc::Receiver<Request<X, Svc::Response>>,
 }
-impl<X, Svc: crate::Service<X> + 'static + Send> Executor<X, Svc>
+impl<X, Svc: crate::Service<X> + 'static + Send> ServerExecutor<X, Svc>
 where
     X: 'static + Send,
     Svc::Future: Send,

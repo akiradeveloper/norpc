@@ -20,7 +20,7 @@ async fn test_hello_world() {
     tokio::spawn(async move {
         let app = HelloWorldApp;
         let service = HelloWorldService::new(app);
-        let server = Executor::new(rx, service);
+        let server = ServerExecutor::new(rx, service);
         server.serve().await
     });
     let chan = ClientService::new(tx);
@@ -49,7 +49,7 @@ async fn test_hello_world_no_send() {
     local.spawn_local(async move {
         let app = HelloWorldLocalApp;
         let service = HelloWorldLocalService::new(app);
-        let server = Executor::new(rx, service);
+        let server = ServerExecutor::new(rx, service);
         server.serve().await
     });
     local.spawn_local(async move {

@@ -46,11 +46,11 @@ impl<X: 'static, Y: 'static> Service<X> for ClientService<X, Y> {
     }
 }
 
-pub struct Executor<X, Svc: Service<X>> {
+pub struct ServerExecutor<X, Svc: Service<X>> {
     service: Svc,
     rx: mpsc::Receiver<Request<X, Svc::Response>>,
 }
-impl<X: 'static, Svc: Service<X> + 'static> Executor<X, Svc> {
+impl<X: 'static, Svc: Service<X> + 'static> ServerExecutor<X, Svc> {
     pub fn new(rx: mpsc::Receiver<Request<X, Svc::Response>>, service: Svc) -> Self {
         Self { service, rx: rx }
     }

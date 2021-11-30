@@ -52,7 +52,7 @@ async fn test_kvstore() {
     tokio::spawn(async move {
         let app = KVStoreApp::new();
         let service = KVStoreService::new(app);
-        let server = Executor::new(rx, service);
+        let server = ServerExecutor::new(rx, service);
         server.serve().await
     });
     let chan = ClientService::new(tx);

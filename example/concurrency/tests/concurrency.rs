@@ -73,7 +73,7 @@ async fn test_concurrent_message() {
     tokio::spawn(async move {
         let app = IdStoreApp::new();
         let service = IdStoreService::new(app);
-        let server = Executor::new(rx, service);
+        let server = ServerExecutor::new(rx, service);
         server.serve().await
     });
     let chan = ClientService::new(tx);
@@ -88,7 +88,7 @@ async fn test_concurrent_message() {
             // Changing this value will see a different complete time.
             .concurrency_limit(100)
             .service(service);
-        let server = Executor::new(rx, service);
+        let server = ServerExecutor::new(rx, service);
         server.serve().await
     });
     let chan = ClientService::new(tx);

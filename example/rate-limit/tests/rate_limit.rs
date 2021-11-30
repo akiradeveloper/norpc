@@ -24,7 +24,7 @@ async fn test_rate_limit() {
         let service = ServiceBuilder::new()
             .rate_limit(5000, std::time::Duration::from_secs(1))
             .service(service);
-        let server = Executor::new(rx, service);
+        let server = ServerExecutor::new(rx, service);
         server.serve().await
     });
     let chan = ClientService::new(tx);
