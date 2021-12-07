@@ -83,6 +83,9 @@ enum StreamType {
 }
 fn parse_type(ty: &Type) -> StreamType {
     let ty = quote!(#ty).to_string();
+    if ty == "()" {
+        return StreamType::Unit("()".to_string());
+    }
     let ty = syn::parse_str::<PathSegment>(&ty).unwrap();
     if ty.ident == Ident::new("Stream", Span::call_site()) {
         let braket = ty.arguments;
