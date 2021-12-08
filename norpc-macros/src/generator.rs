@@ -131,7 +131,7 @@ impl Generator {
 
             let f = format!(
                 "
-		pub async fn {fun_name}({params}) -> Result<{output}, Svc::Error> {{
+		pub async fn {fun_name}({params}) -> std::result::Result<{output}, Svc::Error> {{
             norpc::poll_fn(|ctx| self.svc.poll_ready(ctx)).await.ok();
 			let rep = self.svc.call({}Request::{fun_name}({req_params})).await?;
 			match rep {{
@@ -196,11 +196,11 @@ impl Generator {
     impl<App: {svc_name} + 'static {no_send}> norpc::Service<{svc_name}Request> for {svc_name}Service<App> {{
         type Response = {svc_name}Response;
         type Error = ();
-        type Future = std::pin::Pin<Box<dyn std::future::Future<Output = Result<Self::Response, Self::Error>> {no_send}>>;
+        type Future = std::pin::Pin<Box<dyn std::future::Future<Output = std::result::Result<Self::Response, Self::Error>> {no_send}>>;
         fn poll_ready(
             &mut self,
             _: &mut std::task::Context<'_>,
-        ) -> std::task::Poll<Result<(), Self::Error>> {{
+        ) -> std::task::Poll<std::result::Result<(), Self::Error>> {{
             Ok(()).into()
         }}
 		fn call(&mut self, req: {svc_name}Request) -> Self::Future {{
