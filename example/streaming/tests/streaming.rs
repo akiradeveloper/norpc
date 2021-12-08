@@ -1,6 +1,6 @@
 use futures::stream::StreamExt;
-use futures::stream::{BoxStream, LocalBoxStream};
 use tokio::sync::mpsc;
+use norpc::{LocalBoxStream, BoxStream};
 
 #[norpc::service]
 trait BidiStreaming {

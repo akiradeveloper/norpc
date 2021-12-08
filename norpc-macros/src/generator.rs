@@ -7,9 +7,9 @@ impl Generator {
     fn streamify(&self, ty: &str, yes: bool) -> String {
         if yes {
             if self.no_send {
-                format!("LocalBoxStream<'static, {}>", ty)
+                format!("norpc::LocalBoxStream<'static, {}>", ty)
             } else {
-                format!("BoxStream<'static, {}>", ty)
+                format!("norpc::BoxStream<'static, {}>", ty)
             }
         } else {
             format!("{}", ty)
