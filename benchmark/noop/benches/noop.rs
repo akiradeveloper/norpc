@@ -1,5 +1,4 @@
 use tokio::sync::mpsc;
-use tower::Service;
 
 #[norpc::service]
 trait Noop {
