@@ -1,14 +1,15 @@
 use tokio::sync::mpsc;
 use tokio::sync::oneshot;
+use tokio_util::sync::PollSender;
 
 use super::{Error, Request};
 
 pub struct ClientService<X, Y> {
-    tx: mpsc::Sender<Request<X, Y>>,
+    tx: PollSender<Request<X, Y>>,
 }
 impl<X, Y> ClientService<X, Y> {
     pub fn new(tx: mpsc::Sender<Request<X, Y>>) -> Self {
-        Self { tx: tx }
+        Self { tx: PollSender::new(tx) }
     }
 }
 impl<X, Y> Clone for ClientService<X, Y> {
