@@ -40,5 +40,19 @@ fn bench_noop(c: &mut Criterion) {
     });
 }
 
-criterion_group!(noop, bench_noop);
+fn bench_channel(c: &mut Criterion) {
+    let rt = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    let (tx, mut rx) = mpsc::channel(100);
+    rt.spawn(async move { while let Some(()) = rx.recv().await {} });
+    c.bench_function("noop channel", |b| {
+        b.to_async(&rt).iter(|| async {
+            tx.send(()).await.unwrap();
+        })
+    });
+}
+
+criterion_group!(noop, bench_noop, bench_channel);
 criterion_main!(noop);
