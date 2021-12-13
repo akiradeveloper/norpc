@@ -134,8 +134,8 @@
                     <main>
                         <h1><a class="header" href="#architecture" id="architecture">Architecture</a></h1>
 <p><img src="norpc-stack.png" alt="" /></p>
-<p><strong>norpc utilizes Tower ecosystem.</strong>
-The core of the Tower ecosystem is an abstraction called <code>Service</code> which is like a function from <code>Request</code> to <code>Response</code>.
+<p>norpc utilizes Tower ecosystem.</p>
+<p>The core of the Tower ecosystem is an abstraction called <code>Service</code> which is like a function from <code>Request</code> to <code>Response</code>.
 The ecosystem has many decorators to add new behavior to an existing <code>Service</code>.</p>
 <p>In the diagram, the client requests is coming from the top-left of the stacks and flows down to the bottom-right.
 The client and server is connected by async channel driven by Tokio runtime so there is no overhead for the serialization
