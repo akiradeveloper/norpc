@@ -144,6 +144,27 @@ trait HelloWorld {
 }
 <span class="boring">}
 </span></code></pre></pre>
+<h2><a class="header" href="#non-send-support" id="non-send-support">non-Send support</a></h2>
+<pre><pre class="playpen"><code class="language-rust">
+<span class="boring">#![allow(unused_variables)]
+</span><span class="boring">fn main() {
+</span>#[norpc::service(?Send)]
+trait HelloWorldLocal {
+    // Rc&lt;T&gt; is !Send
+    fn hello(s: Rc&lt;String&gt;) -&gt; Rc&lt;String&gt;;
+}
+<span class="boring">}
+</span></code></pre></pre>
+<h2><a class="header" href="#stream-support" id="stream-support">Stream support</a></h2>
+<pre><pre class="playpen"><code class="language-rust">
+<span class="boring">#![allow(unused_variables)]
+</span><span class="boring">fn main() {
+</span>#[norpc::service]
+trait BidiStreaming {
+    fn double(input: Stream&lt;u64&gt;) -&gt; Stream&lt;u64&gt;;
+}
+<span class="boring">}
+</span></code></pre></pre>
 
                     </main>
 
