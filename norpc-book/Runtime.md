@@ -11,7 +11,7 @@ To run the service in a specific runtime, you need to write some code.
 
 Firstly, you need to implement the generated application trait.
 Note that the application must implement `Clone` and the cloning is assumed to be cheap.
-When you have a state within a state you can use `Arc` to share the reference between threads.
+When you have a state within the application you can use `Arc` to share the reference between threads.
 
 ```rust
 #[derive(Clone)]
