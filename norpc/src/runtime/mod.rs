@@ -10,10 +10,10 @@ pub mod no_send;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    #[error("failed to send a request (closed)")]
-    SendClosed,
-    #[error("failed to receive response (closed)")]
-    RecvClosed,
+    #[error("failed to send a request")]
+    SendError,
+    #[error("failed to receive a response")]
+    RecvError,
 }
 
 pub struct Request<X, Y> {

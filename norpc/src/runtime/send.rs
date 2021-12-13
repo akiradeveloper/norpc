@@ -39,8 +39,8 @@ impl<X: 'static + Send, Y: 'static + Send> crate::Service<X> for ClientService<X
                 inner: req,
                 tx: tx1,
             };
-            tx.send(req).await.map_err(|_| Error::SendClosed)?;
-            let rep = rx1.await.map_err(|_| Error::RecvClosed)?;
+            tx.send(req).await.map_err(|_| Error::SendError)?;
+            let rep = rx1.await.map_err(|_| Error::RecvError)?;
             Ok(rep)
         })
     }
