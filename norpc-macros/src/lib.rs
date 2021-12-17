@@ -82,20 +82,21 @@ enum StreamType {
     Unit(String),
 }
 fn parse_type(ty: &Type) -> StreamType {
-    let ty = quote!(#ty).to_string();
-    if ty == "()" {
+    let ty_str = quote!(#ty).to_string();
+    if ty_str == "()" {
         return StreamType::Unit("()".to_string());
     }
-    let ty = syn::parse_str::<PathSegment>(&ty).unwrap();
-    if ty.ident == Ident::new("Stream", Span::call_site()) {
-        let braket = ty.arguments;
+    let ty_full = syn::parse_str::<Path>(&ty_str).unwrap();
+    let ty_last = ty_full.segments.last().unwrap();
+    if ty_last.ident == Ident::new("Stream", Span::call_site()) {
+        let braket = &ty_last.arguments;
         let inner = match braket {
             PathArguments::AngleBracketed(AngleBracketedGenericArguments { args, .. }) => args,
             _ => unreachable!(),
         };
         StreamType::Stream(quote!(#inner).to_string())
     } else {
-        StreamType::Unit(quote!(#ty).to_string())
+        StreamType::Unit(ty_str)
     }
 }
 fn parse_func(f: &TraitItem) -> Function {

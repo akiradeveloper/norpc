@@ -5,11 +5,11 @@ use tokio::sync::RwLock;
 
 #[norpc::service]
 trait KVStore {
-    fn read(id: u64) -> Option<String>;
+    fn read(id: u64) -> Option<std::string::String>;
     fn write(id: u64, s: String) -> ();
-    fn write_many(kv: HashSet<(u64, String)>);
+    fn write_many(kv: std::collections::HashSet<(u64, std::string::String)>);
     // We can return a result from app to the client.
-    fn noop() -> Result<bool, ()>;
+    fn noop() -> std::result::Result<bool, ()>;
     // If app function fails error is propagated to the client.
     fn panic();
 }
