@@ -13,7 +13,7 @@
 ## Features
 
 - Support in-process microservices through async channel.
-- Support no-`Send` types.
+- Support non-`Send` types.
 - Support `Stream` types.
 
 ## Performance
