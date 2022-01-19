@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Motivation - norpc</title>
+        <title>Example - norpc</title>
         
 
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="motivation.html"><strong aria-hidden="true">1.</strong> Motivation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="message-passsing.html"><strong aria-hidden="true">1.1.</strong> Message Passing</a></li><li class="chapter-item expanded "><a href="tarpc.html"><strong aria-hidden="true">1.2.</strong> Tarpc</a></li><li class="chapter-item expanded "><a href="norpc.html"><strong aria-hidden="true">1.3.</strong> Norpc</a></li></ol></li><li class="chapter-item expanded "><a href="architecture.html"><strong aria-hidden="true">2.</strong> Architecture</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="compiler.html"><strong aria-hidden="true">2.1.</strong> Compiler</a></li><li class="chapter-item expanded "><a href="runtime.html"><strong aria-hidden="true">2.2.</strong> Runtime</a></li></ol></li><li class="chapter-item expanded "><a href="example.html"><strong aria-hidden="true">3.</strong> Example</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="motivation.html"><strong aria-hidden="true">1.</strong> Motivation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="message-passsing.html"><strong aria-hidden="true">1.1.</strong> Message Passing</a></li><li class="chapter-item expanded "><a href="tarpc.html"><strong aria-hidden="true">1.2.</strong> Tarpc</a></li><li class="chapter-item expanded "><a href="norpc.html"><strong aria-hidden="true">1.3.</strong> Norpc</a></li></ol></li><li class="chapter-item expanded "><a href="architecture.html"><strong aria-hidden="true">2.</strong> Architecture</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="compiler.html"><strong aria-hidden="true">2.1.</strong> Compiler</a></li><li class="chapter-item expanded "><a href="runtime.html"><strong aria-hidden="true">2.2.</strong> Runtime</a></li></ol></li><li class="chapter-item expanded "><a href="example.html" class="active"><strong aria-hidden="true">3.</strong> Example</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -132,18 +132,50 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#motivation" id="motivation">Motivation</a></h1>
+                        <h1><a class="header" href="#example" id="example">Example</a></h1>
+<h2><a class="header" href="#resultoption" id="resultoption">Result/Option</a></h2>
+<pre><pre class="playpen"><code class="language-rust">
+<span class="boring">#![allow(unused_variables)]
+</span><span class="boring">fn main() {
+</span>#[norpc::service]
+trait YourService {
+    fn write(id: u64, b: Bytes) -&gt; Result&lt;usize, ()&gt;;
+    fn read(id: u64) -&gt; Option&lt;Bytes&gt;;
+}
+<span class="boring">}
+</span></code></pre></pre>
+<h2><a class="header" href="#non-send" id="non-send">Non-Send</a></h2>
+<pre><pre class="playpen"><code class="language-rust">
+<span class="boring">#![allow(unused_variables)]
+</span><span class="boring">fn main() {
+</span>#[norpc::service(?Send)]
+trait YourService {
+    // Rc&lt;T&gt; is !Send
+    fn echo(s: Rc&lt;String&gt;) -&gt; Rc&lt;String&gt;;
+}
+<span class="boring">}
+</span></code></pre></pre>
+<h2><a class="header" href="#streaming" id="streaming">Streaming</a></h2>
+<pre><pre class="playpen"><code class="language-rust">
+<span class="boring">#![allow(unused_variables)]
+</span><span class="boring">fn main() {
+</span>#[norpc::service]
+trait YourService {
+    fn double(input: Stream&lt;u64&gt;) -&gt; Stream&lt;u64&gt;;
+}
+<span class="boring">}
+</span></code></pre></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-
-                        
-                            <a rel="next" href="message-passsing.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <i class="fa fa-angle-right"></i>
+                            <a rel="prev" href="runtime.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
                             </a>
+                        
+
                         
 
                         <div style="clear: both"></div>
@@ -153,11 +185,11 @@
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-
-                
-                    <a rel="next" href="message-passsing.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <i class="fa fa-angle-right"></i>
+                    <a rel="prev" href="runtime.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
                     </a>
+                
+
                 
             </nav>
 
