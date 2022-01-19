@@ -8,7 +8,12 @@
 
 [Documentation](https://akiradeveloper.github.io/norpc/)
 
-![](https://3.bp.blogspot.com/-BYE2vKLCGwU/Ut0BF_4EfXI/AAAAAAAAdSo/GjcCN353OIE/s800/no_woman.png)
+```rust
+#[norpc::service]
+trait HelloWorld {
+    fn hello(s: String) -> String;
+}
+```
 
 ## Features
 
