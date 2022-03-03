@@ -8,6 +8,9 @@
 
 [Documentation](https://akiradeveloper.github.io/norpc/)
 
+![image](https://user-images.githubusercontent.com/785824/156477309-44a30cd9-25d4-40c3-92c0-1688af8aa930.png)
+
+
 ```rust
 #[norpc::service]
 trait HelloWorld {
