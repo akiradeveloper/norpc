@@ -27,15 +27,3 @@ trait YourService {
     fn echo(s: Rc<String>) -> Rc<String>;
 }
 ```
-
-## Streaming
-
-Stream type is also supported but note that stream is moved through channel.
-This means failing on server-side fails entire streaming on client-side and vice versa.
-
-```rust
-#[norpc::service]
-trait YourService {
-    fn double(input: Stream<u64>) -> Stream<u64>;
-}
-```

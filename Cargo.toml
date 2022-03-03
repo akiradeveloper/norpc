@@ -6,7 +6,6 @@ members = [
     "example/kvstore",
     "example/concurrency",
     "example/rate-limit",
-    "example/streaming",
     "benchmark/noop",
     "benchmark/noop-tarpc",
 ]
