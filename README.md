@@ -19,7 +19,6 @@ trait HelloWorld {
 
 - Support in-process microservices through async channel.
 - Support non-`Send` types.
-- Support `Stream` types.
 
 ## Performance
 

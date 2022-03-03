@@ -8,6 +8,8 @@ trait KVStore {
     fn read(id: u64) -> Option<std::string::String>;
     fn write(id: u64, s: String) -> ();
     fn write_many(kv: std::collections::HashSet<(u64, std::string::String)>);
+    fn list() -> Vec<(u64, std::string::String)>;
+    fn ret_any_tuple() -> (u8, u8);
     // We can return a result from app to the client.
     fn noop() -> std::result::Result<bool, ()>;
     // If app function fails error is propagated to the client.
@@ -37,6 +39,17 @@ impl KVStore for KVStoreApp {
         for (k, v) in kv {
             self.state.write().await.insert(k, v);
         }
+    }
+    async fn list(self) -> Vec<(u64, String)> {
+        let mut out = vec![];
+        let reader = self.state.read().await;
+        for (k, v) in reader.iter() {
+            out.push((*k, v.clone()));
+        }
+        out
+    }
+    async fn ret_any_tuple(self) -> (u8, u8) {
+        (0, 0)
     }
     async fn noop(self) -> Result<bool, ()> {
         Ok(true)
