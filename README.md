@@ -15,6 +15,12 @@ trait HelloWorld {
 }
 ```
 
+## Usage
+
+```
+norpc = { version = "0.7", features = ["runtime"] }
+```
+
 ## Features
 
 - Support in-process microservices through async channel.
