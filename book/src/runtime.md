@@ -1,6 +1,6 @@
 # Runtime
 
-![](norpc-stack.png)
+![](images/norpc-stack.png)
 
 The yellow and blue parts are called "Runtime".
 
