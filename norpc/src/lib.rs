@@ -3,7 +3,6 @@
 // Re-exported for compiler
 pub use async_trait::async_trait;
 pub use futures::future::poll_fn;
-pub use futures::stream::{BoxStream, LocalBoxStream};
 pub use tower_service::Service;
 
 /// Macro for code-generation.
