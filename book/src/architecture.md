@@ -1,6 +1,6 @@
 # Architecture
 
-![](norpc-stack.png)
+![](images/norpc-stack.png)
 
 norpc utilizes Tower ecosystem.
 
