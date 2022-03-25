@@ -2,5 +2,6 @@
 members = [
     "norpc",
     "norpc-macros",
-    "example/hello-world",
+    "debug",
+    "example/hello-world"
 ]

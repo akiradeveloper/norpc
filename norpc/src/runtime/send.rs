@@ -39,7 +39,7 @@ impl<X: 'static + Send, Y: 'static + Send> crate::Service<X> for ClientService<X
                 inner: req,
                 tx: tx1,
             };
-            tx.send(req).await?;
+            tx.send(req).await.map_err(|_| anyhow::anyhow!("couldn't send a request"))?;
             let rep = rx1.await?;
             Ok(rep)
         })

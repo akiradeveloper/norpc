@@ -163,7 +163,8 @@ impl Generator {
             let a = format!(
                 "
 		{svc_name}Request::{fun_name}({req_params}) => {{
-			app.{fun_name}({req_params}).await
+			let rep = app.{fun_name}({req_params}).await;
+            Ok({svc_name}Response::{fun_name}(rep))
 		}}
 		",
                 svc_name = svc.name,
