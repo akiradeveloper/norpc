@@ -9,5 +9,5 @@ edition = "2021"
 tokio = { version = "*", features = ["full"] }
 tower = { version = "*", features = ["full"] }
 
-norpc = { path = "../../norpc", features = ["runtime"] }
+norpc = { path = "../../norpc" }
 anyhow = "1"
