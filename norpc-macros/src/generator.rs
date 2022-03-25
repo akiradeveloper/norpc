@@ -140,7 +140,7 @@ impl Generator {
         }
         format!(
             "
-	impl<Svc: norpc::Service<{svc_name}Request, Response = {svc_name}Response>> {svc_name}Client<Svc> {{
+	impl<Svc: norpc::Service<{svc_name}Request, Response = {svc_name}Response, Error = anyhow::Error>> {svc_name}Client<Svc> {{
 		pub fn new(svc: Svc) -> Self {{
 			Self {{ svc }}
 		}}
