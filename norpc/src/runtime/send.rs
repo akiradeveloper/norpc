@@ -34,14 +34,14 @@ impl<X: 'static + Send, Y: 'static + Send> crate::Service<X> for ClientService<X
     fn call(&mut self, req: X) -> Self::Future {
         let tx = self.tx.clone();
         Box::pin(async move {
-            let (tx1, rx1) = oneshot::channel::<Y>();
+            let (tx1, rx1) = oneshot::channel::<anyhow::Result<Y>>();
             let req = Request {
                 inner: req,
                 tx: tx1,
             };
             tx.send(req).await.map_err(|_| anyhow::anyhow!("couldn't send a request"))?;
             let rep = rx1.await?;
-            Ok(rep)
+            rep
         })
     }
 }
@@ -50,7 +50,7 @@ pub struct ServerExecutor<X, Svc: crate::Service<X>> {
     service: Svc,
     rx: mpsc::Receiver<Request<X, Svc::Response>>,
 }
-impl<X, Svc: crate::Service<X> + 'static + Send> ServerExecutor<X, Svc>
+impl<X, Svc: crate::Service<X, Error = anyhow::Error> + 'static + Send> ServerExecutor<X, Svc>
 where
     X: 'static + Send,
     Svc::Future: Send,
@@ -67,9 +67,8 @@ where
                 .ok();
             let fut = self.service.call(inner);
             tokio::spawn(async move {
-                if let Ok(rep) = fut.await {
-                    tx.send(rep).ok();
-                }
+                let rep = fut.await;
+                tx.send(rep).ok();
             });
         }
     }

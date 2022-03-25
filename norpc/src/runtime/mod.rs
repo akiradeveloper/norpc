@@ -10,5 +10,5 @@ pub mod send;
 
 pub struct Request<X, Y> {
     inner: X,
-    tx: oneshot::Sender<Y>,
+    tx: oneshot::Sender<anyhow::Result<Y>>,
 }

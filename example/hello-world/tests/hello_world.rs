@@ -4,6 +4,8 @@ use tokio::sync::mpsc;
 #[norpc::service]
 trait HelloWorld {
     fn hello(s: String) -> String;
+    fn err();
+    fn panic();
 }
 #[derive(Clone)]
 struct HelloWorldApp;
@@ -11,6 +13,12 @@ struct HelloWorldApp;
 impl HelloWorld for HelloWorldApp {
     async fn hello(self, s: String) -> anyhow::Result<String> {
         Ok(format!("Hello, {}", s))
+    }
+    async fn err(self) -> anyhow::Result<()> {
+        anyhow::bail!("I don't want to say hello to you.")
+    }
+    async fn panic(self) -> anyhow::Result<()> {
+        panic!()
     }
 }
 #[tokio::test(flavor = "multi_thread")]
@@ -26,6 +34,8 @@ async fn test_hello_world() {
     let chan = ClientService::new(tx);
     let mut cli = HelloWorldClient::new(chan);
     assert_eq!(cli.hello("World".to_owned()).await.unwrap(), "Hello, World");
+    dbg!(cli.err().await);
+    dbg!(cli.panic().await);
 }
 
 // #[norpc::service(?Send)]
