@@ -1,7 +1,7 @@
 use tokio::sync::mpsc;
 use tokio::sync::oneshot;
 
-use super::{Error, Request};
+use super::Request;
 
 pub struct ClientService<X, Y> {
     tx: mpsc::Sender<Request<X, Y>>,
@@ -20,7 +20,7 @@ impl<X, Y> Clone for ClientService<X, Y> {
 }
 impl<X: 'static + Send, Y: 'static + Send> crate::Service<X> for ClientService<X, Y> {
     type Response = Y;
-    type Error = Error;
+    type Error = anyhow::Error;
     type Future =
         std::pin::Pin<Box<dyn std::future::Future<Output = Result<Y, Self::Error>> + Send>>;
 
@@ -39,8 +39,8 @@ impl<X: 'static + Send, Y: 'static + Send> crate::Service<X> for ClientService<X
                 inner: req,
                 tx: tx1,
             };
-            tx.send(req).await.map_err(|_| Error::SendError)?;
-            let rep = rx1.await.map_err(|_| Error::RecvError)?;
+            tx.send(req).await?;
+            let rep = rx1.await?;
             Ok(rep)
         })
     }

@@ -31,7 +31,7 @@ impl Generator {
         let mut variants = vec![];
         for fun in &svc.functions {
             variants.push(format!(
-                "{}({})",
+                "{}(anyhow::Result<{}>)",
                 fun.name,
                 fun.output,
             ));
@@ -81,7 +81,7 @@ impl Generator {
             }
             let params = itertools::join(params, ",");
             methods.push(format!(
-                "async fn {}({}) -> {};",
+                "async fn {}({}) -> anyhow::Result<{}>;",
                 fun.name,
                 &params,
                 fun.output,
@@ -120,11 +120,11 @@ impl Generator {
 
             let f = format!(
                 "
-		pub async fn {fun_name}({params}) -> std::result::Result<{output}, Svc::Error> {{
+		pub async fn {fun_name}({params}) -> std::result::Result<{output}, anyhow::Error> {{
             norpc::poll_fn(|ctx| self.svc.poll_ready(ctx)).await.ok();
 			let rep = self.svc.call({}Request::{fun_name}({req_params})).await?;
 			match rep {{
-				{svc_name}Response::{fun_name}(v) => Ok(v),
+				{svc_name}Response::{fun_name}(v) => v,
                 #[allow(unreachable_patterns)]
 				_ => unreachable!(),
 			}}
@@ -163,8 +163,7 @@ impl Generator {
             let a = format!(
                 "
 		{svc_name}Request::{fun_name}({req_params}) => {{
-			let rep = app.{fun_name}({req_params}).await;
-			Ok({svc_name}Response::{fun_name}(rep))
+			app.{fun_name}({req_params}).await
 		}}
 		",
                 svc_name = svc.name,
@@ -184,7 +183,7 @@ impl Generator {
 	}}
     impl<App: {svc_name} + 'static {no_send}> norpc::Service<{svc_name}Request> for {svc_name}Service<App> {{
         type Response = {svc_name}Response;
-        type Error = ();
+        type Error = anyhow::Error;
         type Future = std::pin::Pin<Box<dyn std::future::Future<Output = std::result::Result<Self::Response, Self::Error>> {no_send}>>;
         fn poll_ready(
             &mut self,

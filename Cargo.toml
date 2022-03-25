@@ -3,9 +3,4 @@ members = [
     "norpc",
     "norpc-macros",
     "example/hello-world",
-    "example/kvstore",
-    "example/concurrency",
-    "example/rate-limit",
-    "benchmark/noop",
-    "benchmark/noop-tarpc",
 ]
