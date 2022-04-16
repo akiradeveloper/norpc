@@ -60,15 +60,12 @@ impl KVStore for KVStoreApp {
 }
 #[tokio::test(flavor = "multi_thread")]
 async fn test_kvstore() {
-    use norpc::runtime::send::*;
-    let (tx, rx) = mpsc::channel(100);
-    tokio::spawn(async move {
-        let app = KVStoreApp::new();
-        let service = KVStoreService::new(app);
-        let server = ServerExecutor::new(rx, service);
-        server.serve().await
-    });
-    let chan = ClientService::new(tx);
+    use norpc::runtime::tokio::*;
+
+    let app = KVStoreApp::new();
+    let service = KVStoreService::new(app);
+    let (chan, server) = ServerBuilder::new(service).build();
+    tokio::spawn(server.serve());
 
     let mut cli = KVStoreClient::new(chan);
     // It doesn't crash if it fails.

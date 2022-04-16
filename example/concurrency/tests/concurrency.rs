@@ -16,7 +16,7 @@ trait IdStore {
     fn query(name: u64) -> Option<u64>;
 }
 
-type IdStoreClientService = norpc::runtime::send::ClientService<IdStoreRequest, IdStoreResponse>;
+type IdStoreClientService = norpc::runtime::tokio::Channel<IdStoreRequest, IdStoreResponse>;
 type IdStoreClientT = IdStoreClient<IdStoreClientService>;
 #[derive(Clone)]
 struct IdAllocApp {
@@ -37,7 +37,7 @@ impl IdAlloc for IdAllocApp {
         let sleep_time = rand::random::<u64>() % 100;
         tokio::time::sleep(std::time::Duration::from_millis(sleep_time)).await;
         let id = self.n.fetch_add(1, Ordering::SeqCst);
-        let r: Result<(), norpc::runtime::Error> = self.id_store_cli.save(name, id).await;
+        let r = self.id_store_cli.save(name, id).await;
         assert!(r.is_ok());
         name
     }
@@ -68,30 +68,22 @@ const N: u64 = 10000;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_concurrent_message() {
-    use norpc::runtime::send::*;
-    let (tx, rx) = mpsc::channel(1 << 60);
-    tokio::spawn(async move {
-        let app = IdStoreApp::new();
-        let service = IdStoreService::new(app);
-        let server = ServerExecutor::new(rx, service);
-        server.serve().await
-    });
-    let chan = ClientService::new(tx);
+    use norpc::runtime::tokio::*;
+
+    let app = IdStoreApp::new();
+    let service = IdStoreService::new(app);
+    let (chan, server) = ServerBuilder::new(service).build();
+    tokio::spawn(server.serve());
     let mut id_store_cli = IdStoreClient::new(chan);
 
-    let (tx, rx) = mpsc::channel(1 << 60);
-    let id_store_cli_cln = id_store_cli.clone();
-    tokio::spawn(async move {
-        let app = IdAllocApp::new(id_store_cli_cln);
-        let service = IdAllocService::new(app);
-        let service = ServiceBuilder::new()
-            // Changing this value will see a different complete time.
-            .concurrency_limit(100)
-            .service(service);
-        let server = ServerExecutor::new(rx, service);
-        server.serve().await
-    });
-    let chan = ClientService::new(tx);
+    let app = IdAllocApp::new(id_store_cli.clone());
+    let service = IdAllocService::new(app);
+    let service = ServiceBuilder::new()
+        // Changing this value will see a different complete time.
+        .concurrency_limit(100)
+        .service(service);
+    let (chan, server) = ServerBuilder::new(service).build();
+    tokio::spawn(server.serve());
     let id_alloc_cli = IdAllocClient::new(chan);
 
     let mut queue = futures::stream::FuturesUnordered::new();

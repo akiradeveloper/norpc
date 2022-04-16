@@ -1,3 +1,4 @@
+use norpc::runtime::tokio::ServerBuilder;
 use tokio::sync::mpsc;
 
 #[norpc::service]
@@ -17,19 +18,16 @@ impl Noop for NoopApp {
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 
 fn bench_noop(c: &mut Criterion) {
-    use norpc::runtime::*;
-    let rt = tokio::runtime::Builder::new_multi_thread()
+    use norpc::runtime::tokio::*;
+    let rt = ::tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
         .unwrap();
-    let (tx, rx) = mpsc::channel(100);
-    rt.spawn(async move {
-        let app = NoopApp;
-        let service = NoopService::new(app);
-        let server = send::ServerExecutor::new(rx, service);
-        server.serve().await
-    });
-    let chan = send::ClientService::new(tx);
+    let app = NoopApp;
+    let service = NoopService::new(app);
+    let (chan, server) = ServerBuilder::new(service).build();
+    rt.spawn(server.serve());
+
     let cli = NoopClient::new(chan);
     c.bench_with_input(BenchmarkId::new("noop request", 1), &cli, |b, cli| {
         b.to_async(&rt).iter(|| async {
