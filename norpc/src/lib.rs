@@ -1,8 +1,10 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
-// Re-exported for compiler
+#[doc(hidden)]
 pub use async_trait::async_trait;
+#[doc(hidden)]
 pub use futures::future::poll_fn;
+#[doc(hidden)]
 pub use tower_service::Service;
 
 /// Macro for code-generation.

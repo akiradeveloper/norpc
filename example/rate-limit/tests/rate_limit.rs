@@ -20,18 +20,15 @@ struct ServiceHolder {
 }
 #[tokio::test(flavor = "multi_thread")]
 async fn test_rate_limit() {
-    use norpc::runtime::send::*;
-    let (tx, rx) = mpsc::channel(1 << 60);
-    tokio::spawn(async move {
-        let app = RateLimitApp;
-        let service = RateLimitService::new(app);
-        let service = ServiceBuilder::new()
-            .rate_limit(5000, std::time::Duration::from_secs(1))
-            .service(service);
-        let server = ServerExecutor::new(rx, service);
-        server.serve().await
-    });
-    let chan = ClientService::new(tx);
+    use norpc::runtime::tokio::*;
+    let app = RateLimitApp;
+    let service = RateLimitService::new(app);
+    let service = ServiceBuilder::new()
+        .rate_limit(5000, std::time::Duration::from_secs(1))
+        .service(service);
+    let builder = ServerBuilder::new(service);
+    let (chan, server) = builder.build();
+    tokio::spawn(server.serve());
     let chan = ServiceBuilder::new()
         .buffer(1)
         .rate_limit(1000, std::time::Duration::from_secs(1))
