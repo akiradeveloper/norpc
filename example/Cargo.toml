@@ -1,5 +1,5 @@
 [package]
-name = "concurrency"
+name = "example"
 version = "0.1.0"
 edition = "2021"
 
@@ -11,4 +11,4 @@ tower = { version = "*", features = ["full"] }
 futures = "*"
 rand = "0.8"
 
-norpc = { path = "../../norpc" }
+norpc = { path = "../norpc", features = ["runtime"] }

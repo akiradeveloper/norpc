@@ -1,5 +1,4 @@
 use std::rc::Rc;
-use tokio::sync::mpsc;
 
 #[norpc::service]
 trait HelloWorld {
