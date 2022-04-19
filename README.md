@@ -8,14 +8,30 @@
 
 [Documentation](https://akiradeveloper.github.io/norpc/)
 
-
-
-
 ```rust
+// Service definition.
 #[norpc::service]
 trait HelloWorld {
     fn hello(s: String) -> String;
 }
+
+// Service Implementation.
+#[derive(Clone)]
+struct HelloWorldApp;
+#[async_trait::async_trait]
+impl HelloWorld for HelloWorldApp {
+    async fn hello(self, s: String) -> String {
+        format!("Hello, {}", s)
+    }
+}
+
+// Client code.
+let app = HelloWorldApp;
+let builder = ServerBuilder::new(HelloWorldService::new(app));
+let (chan, server) = builder.build();
+tokio::spawn(server.serve());
+let mut cli = HelloWorldClient::new(chan);
+cli.hello("World".to_owned()).await;
 ```
 
 ## Usage
