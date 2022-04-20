@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
-use std::sync::Arc;
 use tokio::sync::RwLock;
 use tower::ServiceBuilder;
 
@@ -17,48 +16,46 @@ trait IdStore {
 
 type IdStoreClientService = norpc::runtime::tokio::Channel<IdStoreRequest, IdStoreResponse>;
 type IdStoreClientT = IdStoreClient<IdStoreClientService>;
-#[derive(Clone)]
 struct IdAllocApp {
-    n: Arc<AtomicU64>,
+    n: AtomicU64,
     id_store_cli: IdStoreClientT,
 }
 impl IdAllocApp {
     fn new(id_store_cli: IdStoreClientT) -> Self {
         Self {
-            n: Arc::new(AtomicU64::new(1)),
+            n: AtomicU64::new(1),
             id_store_cli,
         }
     }
 }
 #[norpc::async_trait]
 impl IdAlloc for IdAllocApp {
-    async fn alloc(mut self, name: u64) -> u64 {
+    async fn alloc(&self, name: u64) -> u64 {
         let sleep_time = rand::random::<u64>() % 100;
         tokio::time::sleep(std::time::Duration::from_millis(sleep_time)).await;
         let id = self.n.fetch_add(1, Ordering::SeqCst);
-        let r = self.id_store_cli.save(name, id).await;
+        let r = self.id_store_cli.clone().save(name, id).await;
         assert!(r.is_ok());
         name
     }
 }
 
-#[derive(Clone)]
 struct IdStoreApp {
-    map: Arc<RwLock<HashMap<u64, u64>>>,
+    map: RwLock<HashMap<u64, u64>>,
 }
 impl IdStoreApp {
     fn new() -> Self {
         Self {
-            map: Arc::new(RwLock::new(HashMap::new())),
+            map: RwLock::new(HashMap::new()),
         }
     }
 }
 #[norpc::async_trait]
 impl IdStore for IdStoreApp {
-    async fn save(self, name: u64, id: u64) {
+    async fn save(&self, name: u64, id: u64) {
         self.map.write().await.insert(name, id);
     }
-    async fn query(self, name: u64) -> Option<u64> {
+    async fn query(&self, name: u64) -> Option<u64> {
         self.map.read().await.get(&name).cloned()
     }
 }

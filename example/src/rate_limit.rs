@@ -8,11 +8,10 @@ trait RateLimit {
     fn noop();
 }
 
-#[derive(Clone)]
 struct RateLimitApp;
 #[norpc::async_trait]
 impl RateLimit for RateLimitApp {
-    async fn noop(self) {}
+    async fn noop(&self) {}
 }
 struct ServiceHolder {
     chan: BoxCloneService<RateLimitRequest, RateLimitResponse, tower::BoxError>,

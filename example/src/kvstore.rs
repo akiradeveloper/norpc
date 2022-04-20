@@ -1,5 +1,4 @@
 use std::collections::{HashMap, HashSet};
-use std::sync::Arc;
 use tokio::sync::RwLock;
 
 #[norpc::service]
@@ -15,31 +14,30 @@ trait KVStore {
     fn panic();
 }
 
-#[derive(Clone)]
 struct KVStoreApp {
-    state: Arc<RwLock<HashMap<u64, String>>>,
+    state: RwLock<HashMap<u64, String>>,
 }
 impl KVStoreApp {
     fn new() -> Self {
         Self {
-            state: Arc::new(RwLock::new(HashMap::new())),
+            state: RwLock::new(HashMap::new()),
         }
     }
 }
 #[norpc::async_trait]
 impl KVStore for KVStoreApp {
-    async fn read(self, id: u64) -> Option<String> {
+    async fn read(&self, id: u64) -> Option<String> {
         self.state.read().await.get(&id).cloned()
     }
-    async fn write(self, id: u64, v: String) {
+    async fn write(&self, id: u64, v: String) {
         self.state.write().await.insert(id, v);
     }
-    async fn write_many(self, kv: HashSet<(u64, String)>) {
+    async fn write_many(&self, kv: HashSet<(u64, String)>) {
         for (k, v) in kv {
             self.state.write().await.insert(k, v);
         }
     }
-    async fn list(self) -> Vec<(u64, String)> {
+    async fn list(&self) -> Vec<(u64, String)> {
         let mut out = vec![];
         let reader = self.state.read().await;
         for (k, v) in reader.iter() {
@@ -47,13 +45,13 @@ impl KVStore for KVStoreApp {
         }
         out
     }
-    async fn ret_any_tuple(self) -> (u8, u8) {
+    async fn ret_any_tuple(&self) -> (u8, u8) {
         (0, 0)
     }
-    async fn noop(self) -> Result<bool, ()> {
+    async fn noop(&self) -> Result<bool, ()> {
         Ok(true)
     }
-    async fn panic(self) {
+    async fn panic(&self) {
         panic!()
     }
 }
