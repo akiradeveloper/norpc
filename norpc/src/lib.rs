@@ -17,8 +17,8 @@
 //! let rep = tokio_test::block_on(async {
 //!     use norpc::runtime::tokio::*;
 //!     let app = HelloWorldApp;
-//!     let builder = ServerBuilder::new(HelloWorldService::new(app));
-//!     let (chan, server) = builder.build();
+//!     let svc = HelloWorldService::new(app);
+//!     let (chan, server) = ServerBuilder::new(svc).build();
 //!     tokio::spawn(server.serve());
 //!     let mut cli = HelloWorldClient::new(chan);
 //!     cli.hello("World".to_owned()).await
