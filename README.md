@@ -18,7 +18,7 @@ trait HelloWorld {
 ## Usage
 
 ```
-norpc = { version = "0.7", features = ["runtime-tokio"] }
+norpc = { version = "0.8", features = ["runtime-tokio"] }
 ```
 
 ## Features
