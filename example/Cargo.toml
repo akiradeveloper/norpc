@@ -11,4 +11,4 @@ tower = { version = "*", features = ["full"] }
 futures = "*"
 rand = "0.8"
 
-norpc = { path = "../norpc", features = ["runtime"] }
+norpc = { path = "../norpc", features = ["runtime-tokio"] }
