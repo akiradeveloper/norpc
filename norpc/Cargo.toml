@@ -20,7 +20,6 @@ futures = "0.3"
 anyhow = "1"
 
 tokio = { version = "1", features = ["sync", "rt"], optional = true }
-thiserror = { version = "1", optional = true }
 
 [dev-dependencies]
 rand = "0.8"
@@ -29,7 +28,7 @@ tower = { version = "*", features = ["full"] }
 tokio-test = "0.4"
 
 [features]
-runtime = ["tokio", "thiserror"]
+runtime-tokio = ["tokio"]
 
 [package.metadata.docs.rs]
 all-features = true
