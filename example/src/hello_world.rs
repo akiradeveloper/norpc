@@ -4,11 +4,10 @@ use std::rc::Rc;
 trait HelloWorld {
     fn hello(s: String) -> String;
 }
-#[derive(Clone)]
 struct HelloWorldApp;
 #[norpc::async_trait]
 impl HelloWorld for HelloWorldApp {
-    async fn hello(self, s: String) -> String {
+    async fn hello(&self, s: String) -> String {
         format!("Hello, {}", s)
     }
 }
@@ -32,7 +31,7 @@ trait HelloWorldLocal {
 struct HelloWorldLocalApp;
 #[norpc::async_trait(?Send)]
 impl HelloWorldLocal for HelloWorldLocalApp {
-    async fn hello(self, s: Rc<String>) -> Rc<String> {
+    async fn hello(&self, s: Rc<String>) -> Rc<String> {
         format!("Hello, {}", s).into()
     }
 }

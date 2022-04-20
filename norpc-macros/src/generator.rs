@@ -54,7 +54,7 @@ impl Generator {
             "
 	#[derive(Clone)]
 	pub struct {svc_name}Service<App: {svc_name}> {{
-		app: App
+		app: std::sync::Arc<App>
 	}}
 	",
             svc_name = svc.name,
@@ -63,7 +63,7 @@ impl Generator {
     fn generate_trait(&self, svc: &Service) -> String {
         let mut methods = vec![];
         for fun in &svc.functions {
-            let mut params = vec!["self".to_owned()];
+            let mut params = vec!["&self".to_owned()];
             for param in &fun.inputs {
                 params.push(format!("{}:{}", param.var_name, param.typ_name,));
             }
@@ -75,14 +75,15 @@ impl Generator {
         }
         format!(
             "
-		#[norpc::async_trait{no_send}]
-		pub trait {svc_name}: Clone {{
+		#[norpc::async_trait{no_send_marker}]
+		pub trait {svc_name}: Sync {no_send_constraint} {{
 			{}
 		}}
 		",
             itertools::join(methods, ""),
             svc_name = svc.name,
-            no_send = if self.no_send { "(?Send)" } else { "" },
+            no_send_marker = if self.no_send { "(?Send)" } else { "" },
+            no_send_constraint = if self.no_send { "" } else { "+ Send " },
         )
     }
     fn generate_client_impl(&self, svc: &Service) -> String {
@@ -161,7 +162,7 @@ impl Generator {
         "
 	impl<App: {svc_name}> {svc_name}Service<App> {{
 		pub fn new(app: App) -> Self {{
-			Self {{ app }}
+			Self {{ app: std::sync::Arc::new(app) }}
 		}}
 	}}
     impl<App: {svc_name} + 'static {no_send}> norpc::Service<{svc_name}Request> for {svc_name}Service<App> {{

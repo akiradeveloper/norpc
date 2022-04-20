@@ -6,11 +6,10 @@ trait Noop {
     fn noop();
 }
 
-#[derive(Clone)]
 struct NoopApp;
 #[norpc::async_trait]
 impl Noop for NoopApp {
-    async fn noop(self) {
+    async fn noop(&self) {
         // tokio::time::sleep(std::time::Duration::from_millis(10)).await;
     }
 }
