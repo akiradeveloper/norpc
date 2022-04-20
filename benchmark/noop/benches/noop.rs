@@ -41,11 +41,11 @@ fn bench_channel(c: &mut Criterion) {
         .enable_all()
         .build()
         .unwrap();
-    let (tx, mut rx) = mpsc::channel(100);
+    let (tx, mut rx) = mpsc::unbounded_channel();
     rt.spawn(async move { while let Some(()) = rx.recv().await {} });
     c.bench_function("noop channel", |b| {
         b.to_async(&rt).iter(|| async {
-            tx.send(()).await.unwrap();
+            tx.send(()).unwrap();
         })
     });
 }

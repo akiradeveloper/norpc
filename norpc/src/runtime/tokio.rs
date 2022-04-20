@@ -25,7 +25,7 @@ where
         }
     }
     pub fn build(self) -> (Channel<X, Svc::Response>, Server<X, Svc>) {
-        let (tx, rx) = mpsc::channel(100);
+        let (tx, rx) = mpsc::unbounded_channel();
         let server = Server::new(rx, self.svc);
         let chan = Channel::new(tx);
         (chan, server)
@@ -33,10 +33,10 @@ where
 }
 
 pub struct Channel<X, Y> {
-    tx: mpsc::Sender<Request<X, Y>>,
+    tx: mpsc::UnboundedSender<Request<X, Y>>,
 }
 impl<X, Y> Channel<X, Y> {
-    fn new(tx: mpsc::Sender<Request<X, Y>>) -> Self {
+    fn new(tx: mpsc::UnboundedSender<Request<X, Y>>) -> Self {
         Self { tx: tx }
     }
 }
@@ -68,7 +68,7 @@ impl<X: 'static + Send, Y: 'static + Send> crate::Service<X> for Channel<X, Y> {
                 inner: req,
                 tx: tx1,
             };
-            if tx.send(req).await.is_err() {
+            if tx.send(req).is_err() {
                 anyhow::bail!("failed to send a request");
             }
             let rep = rx1.await?;
@@ -79,7 +79,7 @@ impl<X: 'static + Send, Y: 'static + Send> crate::Service<X> for Channel<X, Y> {
 
 pub struct Server<X, Svc: crate::Service<X>> {
     service: Svc,
-    rx: mpsc::Receiver<Request<X, Svc::Response>>,
+    rx: mpsc::UnboundedReceiver<Request<X, Svc::Response>>,
 }
 impl<X, Svc: crate::Service<X> + 'static + Send> Server<X, Svc>
 where
@@ -87,7 +87,7 @@ where
     Svc::Future: Send,
     Svc::Response: Send,
 {
-    fn new(rx: mpsc::Receiver<Request<X, Svc::Response>>, service: Svc) -> Self {
+    fn new(rx: mpsc::UnboundedReceiver<Request<X, Svc::Response>>, service: Svc) -> Self {
         Self { service, rx: rx }
     }
     pub async fn serve(mut self) {
