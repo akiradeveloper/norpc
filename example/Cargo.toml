@@ -10,6 +10,5 @@ tokio = { version = "*", features = ["full"] }
 tower = { version = "*", features = ["full"] }
 futures = "*"
 rand = "0.8"
-anyhow = "1"
 
 norpc = { path = "../norpc", features = ["runtime"] }
