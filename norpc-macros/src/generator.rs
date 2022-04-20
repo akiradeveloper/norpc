@@ -103,11 +103,11 @@ impl Generator {
 
             let f = format!(
                 "
-		pub async fn {fun_name}({params}) -> std::result::Result<{output}, Svc::Error> {{
+		pub async fn {fun_name}({params}) -> {output} {{
             norpc::poll_fn(|ctx| self.svc.poll_ready(ctx)).await.ok();
-			let rep = self.svc.call({}Request::{fun_name}({req_params})).await?;
+			let rep = self.svc.call({}Request::{fun_name}({req_params})).await;
 			match rep {{
-				{svc_name}Response::{fun_name}(v) => Ok(v),
+				Ok({svc_name}Response::{fun_name}(v)) => v,
                 #[allow(unreachable_patterns)]
 				_ => unreachable!(),
 			}}

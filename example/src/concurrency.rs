@@ -34,8 +34,7 @@ impl IdAlloc for IdAllocApp {
         let sleep_time = rand::random::<u64>() % 100;
         tokio::time::sleep(std::time::Duration::from_millis(sleep_time)).await;
         let id = self.n.fetch_add(1, Ordering::SeqCst);
-        let r = self.id_store_cli.clone().save(name, id).await;
-        assert!(r.is_ok());
+        self.id_store_cli.clone().save(name, id).await;
         name
     }
 }
@@ -91,9 +90,9 @@ async fn test_concurrent_message() {
     use futures::StreamExt;
     let mut n = 0;
     let mut diff_cnt = 0;
-    while let Some(Ok(name)) = queue.next().await {
+    while let Some(name) = queue.next().await {
         n += 1;
-        let id0 = id_store_cli.query(name).await.unwrap();
+        let id0 = id_store_cli.query(name).await;
         assert!(id0.is_some());
         let id = id0.unwrap();
         if id != name {

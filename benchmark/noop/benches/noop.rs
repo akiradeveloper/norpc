@@ -31,7 +31,7 @@ fn bench_noop(c: &mut Criterion) {
     c.bench_with_input(BenchmarkId::new("noop request", 1), &cli, |b, cli| {
         b.to_async(&rt).iter(|| async {
             let mut cli = cli.clone();
-            cli.noop().await.unwrap();
+            cli.noop().await;
         });
     });
 }
