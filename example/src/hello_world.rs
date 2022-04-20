@@ -19,7 +19,7 @@ async fn test_hello_world() {
     let (chan, server) = builder.build();
     tokio::spawn(server.serve());
     let mut cli = HelloWorldClient::new(chan);
-    assert_eq!(cli.hello("World".to_owned()).await.unwrap(), "Hello, World");
+    assert_eq!(cli.hello("World".to_owned()).await, "Hello, World");
 }
 
 #[norpc::service(?Send)]

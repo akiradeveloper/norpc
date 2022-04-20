@@ -38,6 +38,6 @@ async fn test_rate_limit() {
     for _ in 0..N {
         // This can be commented out but to make sure thet the client is cloneable.
         let mut cli = cli.clone();
-        cli.noop().await.unwrap();
+        cli.noop().await;
     }
 }

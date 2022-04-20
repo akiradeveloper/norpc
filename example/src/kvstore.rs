@@ -10,8 +10,6 @@ trait KVStore {
     fn ret_any_tuple() -> (u8, u8);
     // We can return a result from app to the client.
     fn noop() -> std::result::Result<bool, ()>;
-    // If app function fails error is propagated to the client.
-    fn panic();
 }
 
 struct KVStoreApp {
@@ -51,9 +49,6 @@ impl KVStore for KVStoreApp {
     async fn noop(&self) -> Result<bool, ()> {
         Ok(true)
     }
-    async fn panic(&self) {
-        panic!()
-    }
 }
 #[tokio::test(flavor = "multi_thread")]
 async fn test_kvstore() {
@@ -65,25 +60,17 @@ async fn test_kvstore() {
     tokio::spawn(server.serve());
 
     let mut cli = KVStoreClient::new(chan);
-    // It doesn't crash if it fails.
-    for _ in 0..10000 {
-        assert!(cli.panic().await.is_err());
-    }
-    assert_eq!(cli.read(1).await.unwrap(), None);
-    cli.write(1, "one".to_owned()).await.unwrap();
-    assert_eq!(cli.read(1).await.unwrap(), Some("one".to_owned()));
-    assert_eq!(cli.read(2).await.unwrap(), None);
-    assert_eq!(cli.read(3).await.unwrap(), None);
+    assert_eq!(cli.read(1).await, None);
+    cli.write(1, "one".to_owned()).await;
+    assert_eq!(cli.read(1).await, Some("one".to_owned()));
+    assert_eq!(cli.read(2).await, None);
+    assert_eq!(cli.read(3).await, None);
 
     let mut cli2 = cli.clone();
-    // It doesn't crash if it fails.
-    for _ in 0..10000 {
-        assert!(cli2.panic().await.is_err());
-    }
     let mut h = HashSet::new();
     h.insert((2, "two".to_owned()));
     h.insert((3, "three".to_owned()));
-    cli2.write_many(h).await.unwrap();
-    assert_eq!(cli2.read(3).await.unwrap(), Some("three".to_owned()));
-    assert_eq!(cli2.noop().await.unwrap(), Ok(true));
+    cli2.write_many(h).await;
+    assert_eq!(cli2.read(3).await, Some("three".to_owned()));
+    assert_eq!(cli2.noop().await, Ok(true));
 }
