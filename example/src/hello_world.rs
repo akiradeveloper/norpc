@@ -27,7 +27,6 @@ trait HelloWorldLocal {
     // Rc<T> is !Send
     fn hello(s: Rc<String>) -> Rc<String>;
 }
-#[derive(Clone)]
 struct HelloWorldLocalApp;
 #[norpc::async_trait(?Send)]
 impl HelloWorldLocal for HelloWorldLocalApp {
