@@ -22,8 +22,8 @@ impl HelloWorld for HelloWorldApp {
 ```
 
 Then, build a server and a connecting channel.
-After spawning the server in a async runtime, you can
-send requests to the server through the channel.
+After spawning the server in a async runtime,
+you can send requests to the server through the channel.
 
 ```rust
 use norpc::runtime::*;
