@@ -52,7 +52,6 @@ impl Generator {
     fn generate_server_struct(&self, svc: &Service) -> String {
         format!(
             "
-	#[derive(Clone)]
 	pub struct {svc_name}Service<App: {svc_name}> {{
 		app: std::sync::Arc<App>
 	}}
