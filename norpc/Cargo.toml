@@ -23,8 +23,8 @@ tokio = { version = "1", features = ["sync", "rt"], optional = true }
 
 [dev-dependencies]
 rand = "0.8"
-tokio = { version = "*", features = ["full"] }
-tower = { version = "*", features = ["full"] }
+tokio = { version = "1", features = ["full"] }
+tower = { version = "0.4", features = ["full"] }
 tokio-test = "0.4"
 
 [features]
