@@ -25,6 +25,7 @@ norpc = { version = "0.8", features = ["runtime-tokio"] }
 
 - Support in-process microservices through async channel.
 - Support non-`Send` types.
+- Support request cancellation from client.
 
 ## Performance
 
