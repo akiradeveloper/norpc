@@ -1,10 +1,10 @@
 use std::marker::PhantomData;
 
+use futures::channel::{mpsc, oneshot};
+use futures::StreamExt;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
-use tokio::sync::mpsc;
-use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
 
 enum CoreRequest<X, Y> {
@@ -35,7 +35,7 @@ where
         }
     }
     pub fn build(self) -> (Channel<X, Svc::Response>, Server<X, Svc>) {
-        let (tx, rx) = mpsc::unbounded_channel();
+        let (tx, rx) = mpsc::unbounded();
         let server = Server::new(rx, self.svc);
         let chan = Channel::new(tx);
         (chan, server)
@@ -72,7 +72,7 @@ impl<X, Y> Drop for Channel<X, Y> {
         let cancel_req = CoreRequest::Cancel {
             stream_id: self.stream_id,
         };
-        self.tx.send(cancel_req).ok();
+        self.tx.unbounded_send(cancel_req).ok();
     }
 }
 impl<X: 'static + Send, Y: 'static + Send> crate::Service<X> for Channel<X, Y> {
@@ -98,7 +98,7 @@ impl<X: 'static + Send, Y: 'static + Send> crate::Service<X> for Channel<X, Y> {
                 tx: tx1,
                 stream_id,
             };
-            if tx.send(req).is_err() {
+            if tx.unbounded_send(req).is_err() {
                 anyhow::bail!("failed to send a request");
             }
             let rep = rx1.await?;
@@ -122,7 +122,7 @@ where
     }
     pub async fn serve(mut self) {
         let mut processings: HashMap<u64, JoinHandle<()>> = HashMap::new();
-        while let Some(req) = self.rx.recv().await {
+        while let Some(req) = self.rx.next().await {
             match req {
                 CoreRequest::AppRequest {
                     inner,
