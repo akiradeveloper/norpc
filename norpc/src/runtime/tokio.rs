@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
 use futures::channel::{mpsc, oneshot};
+use futures::task::Spawn;
 use futures::StreamExt;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -122,6 +123,8 @@ where
     }
     pub async fn serve(mut self) {
         use futures::future::AbortHandle;
+        use futures::task::SpawnExt;
+        let driver = TokioDriver;
         let mut processings: HashMap<u64, AbortHandle> = HashMap::new();
         while let Some(req) = self.rx.next().await {
             match req {
@@ -145,7 +148,12 @@ where
                             tx.send(rep).ok();
                         }
                     });
-                    tokio::spawn(fut);
+                    let fut = async move {
+                        fut.await.ok();
+                    };
+                    if let Err(e) = driver.spawn(fut) {
+                        abort_handle.abort();
+                    }
                     processings.insert(stream_id, abort_handle);
                 }
                 CoreRequest::Cancel { stream_id } => {
@@ -156,5 +164,16 @@ where
                 }
             }
         }
+    }
+}
+
+struct TokioDriver;
+impl futures::task::Spawn for TokioDriver {
+    fn spawn_obj(
+        &self,
+        future: futures::task::FutureObj<'static, ()>,
+    ) -> Result<(), futures::task::SpawnError> {
+        tokio::spawn(future);
+        Ok(())
     }
 }
