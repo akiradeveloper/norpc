@@ -121,7 +121,8 @@ where
         Self { service, rx: rx }
     }
     pub async fn serve(mut self) {
-        let mut processings: HashMap<u64, JoinHandle<()>> = HashMap::new();
+        use futures::future::AbortHandle;
+        let mut processings: HashMap<u64, AbortHandle> = HashMap::new();
         while let Some(req) = self.rx.next().await {
             match req {
                 CoreRequest::AppRequest {
@@ -139,12 +140,13 @@ where
                         .await
                         .ok();
                     let fut = self.service.call(inner);
-                    let handle = tokio::spawn(async move {
+                    let (fut, abort_handle) = futures::future::abortable(async move {
                         if let Ok(rep) = fut.await {
                             tx.send(rep).ok();
                         }
                     });
-                    processings.insert(stream_id, handle);
+                    tokio::spawn(fut);
+                    processings.insert(stream_id, abort_handle);
                 }
                 CoreRequest::Cancel { stream_id } => {
                     if let Some(handle) = processings.get(&stream_id) {
