@@ -7,8 +7,9 @@ edition = "2021"
 
 [dependencies]
 tokio = { version = "*", features = ["full"] }
+async-std = { version = "*" }
 tower = { version = "*", features = ["full"] }
 futures = "*"
 rand = "0.8"
 
-norpc = { path = "../norpc", features = ["runtime-tokio"] }
+norpc = { path = "../norpc", features = ["runtime", "tokio-executor", "async-std-executor"] }

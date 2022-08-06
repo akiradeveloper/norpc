@@ -36,5 +36,7 @@ pub use tower_service::Service;
 /// Macro for code-generation.
 pub use norpc_macros::service;
 
+#[cfg(feature = "runtime")]
+#[cfg_attr(docsrs, doc(cfg(feature = "runtime")))]
 /// Runtime implementations.
 pub mod runtime;

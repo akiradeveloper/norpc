@@ -1,7 +1,12 @@
-#[cfg(feature = "tokio")]
-#[cfg_attr(docsrs, doc(cfg(feature = "tokio")))]
+#[cfg(feature = "tokio-executor")]
+#[cfg_attr(docsrs, doc(cfg(feature = "tokio-executor")))]
 /// Tokio support.
 pub mod tokio;
+
+#[cfg(feature = "async-std-executor")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async-std-executor")))]
+/// async-std support.
+pub mod async_std;
 
 use std::marker::PhantomData;
 

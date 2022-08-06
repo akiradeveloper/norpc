@@ -5,3 +5,4 @@ mod kvstore;
 mod no_runtime;
 mod panic;
 mod rate_limit;
+mod async_std_runtime;

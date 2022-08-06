@@ -9,7 +9,7 @@ edition = "2021"
 tokio = { version = "*", features = ["full"] }
 tower = { version = "*", features = ["full"] }
 
-norpc = { path = "../../norpc", features = ["runtime-tokio"] }
+norpc = { path = "../../norpc", features = ["runtime", "tokio-executor"] }
 
 [dev-dependencies]
 # https://github.com/bheisler/criterion.rs/blob/master/book/src/user_guide/benchmarking_async.md
