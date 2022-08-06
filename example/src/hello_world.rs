@@ -13,11 +13,11 @@ impl HelloWorld for HelloWorldApp {
 }
 #[tokio::test(flavor = "multi_thread")]
 async fn test_hello_world() {
-    use norpc::runtime::tokio::*;
+    use norpc::runtime::*;
     let app = HelloWorldApp;
     let builder = ServerBuilder::new(HelloWorldService::new(app));
     let (chan, server) = builder.build();
-    tokio::spawn(server.serve());
+    ::tokio::spawn(server.serve(tokio::TokioExecutor));
     let mut cli = HelloWorldClient::new(chan);
     assert_eq!(cli.hello("World".to_owned()).await, "Hello, World");
 }
