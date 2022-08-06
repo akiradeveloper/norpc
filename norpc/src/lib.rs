@@ -15,11 +15,11 @@
 //!    }
 //! }
 //! let rep = tokio_test::block_on(async {
-//!     use norpc::runtime::tokio::*;
+//!     use norpc::runtime::*;
 //!     let app = HelloWorldApp;
 //!     let svc = HelloWorldService::new(app);
 //!     let (chan, server) = ServerBuilder::new(svc).build();
-//!     tokio::spawn(server.serve());
+//!     ::tokio::spawn(server.serve(tokio::TokioExecutor));
 //!     let mut cli = HelloWorldClient::new(chan);
 //!     cli.hello("World".to_owned()).await
 //! });

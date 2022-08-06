@@ -52,12 +52,12 @@ impl KVStore for KVStoreApp {
 }
 #[tokio::test(flavor = "multi_thread")]
 async fn test_kvstore() {
-    use norpc::runtime::tokio::*;
+    use norpc::runtime::*;
 
     let app = KVStoreApp::new();
     let service = KVStoreService::new(app);
     let (chan, server) = ServerBuilder::new(service).build();
-    tokio::spawn(server.serve());
+    ::tokio::spawn(server.serve(tokio::TokioExecutor));
 
     let mut cli = KVStoreClient::new(chan);
     assert_eq!(cli.read(1).await, None);

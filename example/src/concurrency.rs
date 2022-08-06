@@ -14,7 +14,7 @@ trait IdStore {
     fn query(name: u64) -> Option<u64>;
 }
 
-type IdStoreClientService = norpc::runtime::tokio::Channel<IdStoreRequest, IdStoreResponse>;
+type IdStoreClientService = norpc::runtime::Channel<IdStoreRequest, IdStoreResponse>;
 type IdStoreClientT = IdStoreClient<IdStoreClientService>;
 struct IdAllocApp {
     n: AtomicU64,
@@ -63,12 +63,12 @@ const N: u64 = 10000;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_concurrent_message() {
-    use norpc::runtime::tokio::*;
+    use norpc::runtime::*;
 
     let app = IdStoreApp::new();
     let service = IdStoreService::new(app);
     let (chan, server) = ServerBuilder::new(service).build();
-    tokio::spawn(server.serve());
+    ::tokio::spawn(server.serve(tokio::TokioExecutor));
     let mut id_store_cli = IdStoreClient::new(chan);
 
     let app = IdAllocApp::new(id_store_cli.clone());
@@ -78,7 +78,7 @@ async fn test_concurrent_message() {
         .concurrency_limit(100)
         .service(service);
     let (chan, server) = ServerBuilder::new(service).build();
-    tokio::spawn(server.serve());
+    ::tokio::spawn(server.serve(tokio::TokioExecutor));
     let id_alloc_cli = IdAllocClient::new(chan);
 
     let mut queue = futures::stream::FuturesUnordered::new();
