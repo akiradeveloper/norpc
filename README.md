@@ -53,10 +53,10 @@ norpc = { version = "0.8", features = ["runtime", "tokio-executor"] }
 
 ## Performance
 
-The RPC overhead is x1.7 lower than [google/tarpc](https://github.com/google/tarpc). With norpc, you can send more than 100k requests per second.
+norpc is about 2x faster than [google/tarpc](https://github.com/google/tarpc).
 
-The benchmark program launches a noop server and send requests from the client.
-In measurement, [Criterion](https://github.com/bheisler/criterion.rs) is used.
+To compare the pure overhead, he benchmark program launches
+a no-op server and send requests from the client.
 
 ```
 noop request/1          time:   [8.9181 us 8.9571 us 9.0167 us]
