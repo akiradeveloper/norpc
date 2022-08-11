@@ -26,7 +26,7 @@ async fn test_rate_limit() {
         .service(service);
     let builder = ServerBuilder::new(service);
     let (chan, server) = builder.build();
-    ::tokio::spawn(server.serve(tokio::TokioExecutor));
+    ::tokio::spawn(server.serve(TokioExecutor));
     let chan = ServiceBuilder::new()
         .buffer(1)
         .rate_limit(1000, std::time::Duration::from_secs(1))

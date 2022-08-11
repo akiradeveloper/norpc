@@ -38,5 +38,5 @@ pub use norpc_macros::service;
 
 #[cfg(feature = "runtime")]
 #[cfg_attr(docsrs, doc(cfg(feature = "runtime")))]
-/// Runtime implementations.
+/// Runtime implementation.
 pub mod runtime;

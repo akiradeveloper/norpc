@@ -57,7 +57,7 @@ async fn test_kvstore() {
     let app = KVStoreApp::new();
     let service = KVStoreService::new(app);
     let (chan, server) = ServerBuilder::new(service).build();
-    ::tokio::spawn(server.serve(tokio::TokioExecutor));
+    ::tokio::spawn(server.serve(TokioExecutor));
 
     let mut cli = KVStoreClient::new(chan);
     assert_eq!(cli.read(1).await, None);

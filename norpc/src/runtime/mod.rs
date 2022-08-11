@@ -1,13 +1,3 @@
-#[cfg(feature = "tokio-executor")]
-#[cfg_attr(docsrs, doc(cfg(feature = "tokio-executor")))]
-/// Tokio support.
-pub mod tokio;
-
-#[cfg(feature = "async-std-executor")]
-#[cfg_attr(docsrs, doc(cfg(feature = "async-std-executor")))]
-/// async-std support.
-pub mod async_std;
-
 use std::marker::PhantomData;
 
 use futures::channel::{mpsc, oneshot};
@@ -171,5 +161,33 @@ where
                 }
             }
         }
+    }
+}
+
+#[cfg(feature = "tokio-executor")]
+#[cfg_attr(docsrs, doc(cfg(feature = "tokio-executor")))]
+/// Tokio support.
+pub struct TokioExecutor;
+impl futures::task::Spawn for TokioExecutor {
+    fn spawn_obj(
+        &self,
+        future: futures::task::FutureObj<'static, ()>,
+    ) -> Result<(), futures::task::SpawnError> {
+        tokio::spawn(future);
+        Ok(())
+    }
+}
+
+#[cfg(feature = "async-std-executor")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async-std-executor")))]
+/// async-std support.
+pub struct AsyncStdExecutor;
+impl futures::task::Spawn for AsyncStdExecutor {
+    fn spawn_obj(
+        &self,
+        future: futures::task::FutureObj<'static, ()>,
+    ) -> Result<(), futures::task::SpawnError> {
+        async_std::task::spawn(future);
+        Ok(())
     }
 }
