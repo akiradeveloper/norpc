@@ -37,7 +37,7 @@ assert_eq!(rep, "Hello, World");
 ## Usage
 
 ```
-norpc = { version = "0.8", features = ["runtime", "tokio-executor"] }
+norpc = { version = "0.9", features = ["runtime", "tokio-executor"] }
 ```
 
 - runtime: Use norpc runtime
