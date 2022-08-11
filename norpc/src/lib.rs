@@ -19,7 +19,7 @@
 //!     let app = HelloWorldApp;
 //!     let svc = HelloWorldService::new(app);
 //!     let (chan, server) = ServerBuilder::new(svc).build();
-//!     ::tokio::spawn(server.serve(tokio::TokioExecutor));
+//!     ::tokio::spawn(server.serve(TokioExecutor));
 //!     let mut cli = HelloWorldClient::new(chan);
 //!     cli.hello("World".to_owned()).await
 //! });
