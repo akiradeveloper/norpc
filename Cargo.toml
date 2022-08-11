@@ -2,7 +2,7 @@
 members = [
     "norpc",
     "norpc-macros",
-    "example",
+    "examples",
     "benchmark/noop",
     "benchmark/noop-tarpc",
 ]
