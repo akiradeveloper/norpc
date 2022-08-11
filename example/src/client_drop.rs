@@ -31,7 +31,7 @@ async fn test_client_drop() {
     };
     let builder = ServerBuilder::new(LoopService::new(app));
     let (chan, server) = builder.build();
-    ::tokio::spawn(server.serve(tokio::TokioExecutor));
+    ::tokio::spawn(server.serve(TokioExecutor));
 
     let mut cli1 = LoopClient::new(chan.clone());
     let hdl1 = ::tokio::spawn(async move {

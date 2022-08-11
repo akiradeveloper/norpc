@@ -17,7 +17,7 @@ async fn test_hello_world() {
     let app = HelloWorldApp;
     let builder = ServerBuilder::new(HelloWorldService::new(app));
     let (chan, server) = builder.build();
-    ::tokio::spawn(server.serve(tokio::TokioExecutor));
+    ::tokio::spawn(server.serve(TokioExecutor));
     let mut cli = HelloWorldClient::new(chan);
     assert_eq!(cli.hello("World".to_owned()).await, "Hello, World");
 }

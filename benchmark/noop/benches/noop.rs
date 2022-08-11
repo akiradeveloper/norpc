@@ -25,7 +25,7 @@ fn bench_noop(c: &mut Criterion) {
     let app = NoopApp;
     let service = NoopService::new(app);
     let (chan, server) = ServerBuilder::new(service).build();
-    rt.spawn(server.serve(tokio::TokioExecutor));
+    rt.spawn(server.serve(TokioExecutor));
 
     let cli = NoopClient::new(chan);
     c.bench_with_input(BenchmarkId::new("noop request", 1), &cli, |b, cli| {

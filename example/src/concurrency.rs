@@ -68,7 +68,7 @@ async fn test_concurrent_message() {
     let app = IdStoreApp::new();
     let service = IdStoreService::new(app);
     let (chan, server) = ServerBuilder::new(service).build();
-    ::tokio::spawn(server.serve(tokio::TokioExecutor));
+    ::tokio::spawn(server.serve(TokioExecutor));
     let mut id_store_cli = IdStoreClient::new(chan);
 
     let app = IdAllocApp::new(id_store_cli.clone());
@@ -78,7 +78,7 @@ async fn test_concurrent_message() {
         .concurrency_limit(100)
         .service(service);
     let (chan, server) = ServerBuilder::new(service).build();
-    ::tokio::spawn(server.serve(tokio::TokioExecutor));
+    ::tokio::spawn(server.serve(TokioExecutor));
     let id_alloc_cli = IdAllocClient::new(chan);
 
     let mut queue = futures::stream::FuturesUnordered::new();

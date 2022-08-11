@@ -17,7 +17,7 @@ async fn test_panic() {
     let app = App;
     let service = PanicService::new(app);
     let (chan, server) = ServerBuilder::new(service).build();
-    ::tokio::spawn(server.serve(tokio::TokioExecutor));
+    ::tokio::spawn(server.serve(TokioExecutor));
 
     let mut cli = PanicClient::new(chan);
     cli.panic().await;

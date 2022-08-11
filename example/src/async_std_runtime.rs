@@ -11,13 +11,13 @@ impl HelloWorld for HelloWorldApp {
 }
 #[test]
 fn test_async_std_runtime() {
-	async_std::task::block_on(async {
-		use norpc::runtime::*;
-		let app = HelloWorldApp;
-		let builder = ServerBuilder::new(HelloWorldService::new(app));
-		let (chan, server) = builder.build();
-		::async_std::task::spawn(server.serve(async_std::AsyncStdExecutor));
-		let mut cli = HelloWorldClient::new(chan);
-		assert_eq!(cli.hello("World".to_owned()).await, "Hello, World");
-	})
+    async_std::task::block_on(async {
+        use norpc::runtime::*;
+        let app = HelloWorldApp;
+        let builder = ServerBuilder::new(HelloWorldService::new(app));
+        let (chan, server) = builder.build();
+        ::async_std::task::spawn(server.serve(AsyncStdExecutor));
+        let mut cli = HelloWorldClient::new(chan);
+        assert_eq!(cli.hello("World".to_owned()).await, "Hello, World");
+    })
 }
