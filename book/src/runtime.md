@@ -26,13 +26,12 @@ After spawning the server in a async runtime, you can
 send requests to the server through the channel.
 
 ```rust
-use norpc::runtime::tokio::*;
-
+use norpc::runtime::*;
 let app = HelloWorldApp;
 let builder = ServerBuilder::new(HelloWorldService::new(app));
 let (chan, server) = builder.build();
 
-tokio::spawn(server.serve());
+tokio::spawn(server.serve(TokioExecutor));
 
 let mut cli = HelloWorldClient::new(chan);
 assert_eq!(cli.hello("World".to_owned()).await, "Hello, World");
