@@ -8,22 +8,46 @@
 
 [Documentation](https://akiradeveloper.github.io/norpc/)
 
+## Example
+
 ```rust
 #[norpc::service]
 trait HelloWorld {
-    fn hello(s: String) -> String;
+   fn hello(s: String) -> String;
 }
+struct HelloWorldApp;
+#[async_trait::async_trait]
+impl HelloWorld for HelloWorldApp {
+   async fn hello(&self, s: String) -> String {
+       format!("Hello, {}", s)
+   }
+}
+let rep = tokio_test::block_on(async {
+    use norpc::runtime::*;
+    let app = HelloWorldApp;
+    let svc = HelloWorldService::new(app);
+    let (chan, server) = ServerBuilder::new(svc).build();
+    tokio::spawn(server.serve(TokioExecutor));
+    let mut cli = HelloWorldClient::new(chan);
+    cli.hello("World".to_owned()).await
+});
+assert_eq!(rep, "Hello, World");
 ```
 
 ## Usage
 
 ```
-norpc = { version = "0.8", features = ["runtime-tokio"] }
+norpc = { version = "0.8", features = ["runtime", "tokio-executor"] }
 ```
+
+- runtime: Use norpc runtime
+- tokio-executor: Use tokio as async runtime.
+- async-std-executor: Use async-std as async runtime.
 
 ## Features
 
 - Support in-process microservices through async channel.
+- Async runtime agnostic.
 - Support non-`Send` types.
 - Support request cancellation from client.
 
