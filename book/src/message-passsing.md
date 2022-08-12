@@ -1,12 +1,12 @@
 # Message Passing
 
-To share state between async processes, these two possible solutions are to be considered
+To share state between async processes, these two possible solutions can be considered
 
 1. Shared memory
 2. Message passing
 
 The benefit of message passing is
-the processes are isolated and only communicated via defined messages.
+the processes are isolated and only communicated using defined messages.
 Each process typically holds some resources like storage or connection to external service as a sole owner
 and encapsulates the direct access to the resource from other processes.
 This makes developing async applications easy because your interest is minimized.
@@ -14,12 +14,12 @@ This makes developing async applications easy because your interest is minimized
 You can also read this documentation from Tokio.
 [https://tokio.rs/tokio/tutorial/channels](https://tokio.rs/tokio/tutorial/channels)
 
-## Message passing needs a lot of coding
+## Problem: Boilarplate
 
 Let's design your async application by message passing.
-In this case, you have to define the message types for request and response by hand
+In this case, you have to define your own message types for request and response by hand
 and may have to write some logics that consumes messages from channel or send response to the sender
-using oneshot channel. From the Tokio documentation it would be like this
+using oneshot channel. From the Tokio documentation this could be like this:
 
 ```rust
 use tokio::sync::oneshot;
@@ -61,19 +61,20 @@ while let Some(cmd) = rx.recv().await {
 }
 ```
 
-Do you like to write such boring codes for each service again and again?
-The answer would be no.
+However, writing such codes is really tedious.
 
-## Use the power of code generation
+## Solution: Code generation
 
-You are happy if you can define your service in this way
+The solution is to generate code so you can 
+focus on the logics rather than the boilarplates.
+
+With norpc, you can define your in-memory microservice
+like this and this will generate all the other tedious codes.
 
 ```rust
+#[norpc::service]
 trait YourService {
     fn get(key: String) -> Option<Bytes>;
     fn set(key: String, val: Bytes);
 }
 ```
-
-and rest of the codes are generated automatically.
-This is what norpc brings you.
