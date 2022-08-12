@@ -168,6 +168,8 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "tokio-executor")))]
 /// Tokio support.
 pub struct TokioExecutor;
+
+#[cfg(feature = "tokio-executor")]
 impl futures::task::Spawn for TokioExecutor {
     fn spawn_obj(
         &self,
@@ -182,6 +184,8 @@ impl futures::task::Spawn for TokioExecutor {
 #[cfg_attr(docsrs, doc(cfg(feature = "async-std-executor")))]
 /// async-std support.
 pub struct AsyncStdExecutor;
+
+#[cfg(feature = "async-std-executor")]
 impl futures::task::Spawn for AsyncStdExecutor {
     fn spawn_obj(
         &self,
