@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="motivation.html"><strong aria-hidden="true">1.</strong> Motivation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="message-passsing.html"><strong aria-hidden="true">1.1.</strong> Message Passing</a></li><li class="chapter-item expanded "><a href="tarpc.html"><strong aria-hidden="true">1.2.</strong> Tarpc</a></li></ol></li><li class="chapter-item expanded "><a href="architecture.html" class="active"><strong aria-hidden="true">2.</strong> Architecture</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="compiler.html"><strong aria-hidden="true">2.1.</strong> Compiler</a></li><li class="chapter-item expanded "><a href="runtime.html"><strong aria-hidden="true">2.2.</strong> Runtime</a></li></ol></li><li class="chapter-item expanded "><a href="example.html"><strong aria-hidden="true">3.</strong> Example</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="motivation.html"><strong aria-hidden="true">1.</strong> Motivation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="message-passsing.html"><strong aria-hidden="true">1.1.</strong> Message Passing</a></li><li class="chapter-item expanded "><a href="previous-work.html"><strong aria-hidden="true">1.2.</strong> Previous Work</a></li></ol></li><li class="chapter-item expanded "><a href="architecture.html" class="active"><strong aria-hidden="true">2.</strong> Architecture</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="compiler.html"><strong aria-hidden="true">2.1.</strong> Compiler</a></li><li class="chapter-item expanded "><a href="runtime.html"><strong aria-hidden="true">2.2.</strong> Runtime</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -135,18 +135,18 @@
                         <h1><a class="header" href="#architecture" id="architecture">Architecture</a></h1>
 <p><img src="images/norpc-stack.png" alt="" /></p>
 <p>norpc utilizes Tower ecosystem.</p>
-<p>The core of the Tower ecosystem is an abstraction called <code>Service</code> which is like a function from <code>Request</code> to <code>Response</code>.
+<p>The core of the Tower ecosystem is an abstraction called <code>Service</code> which is like a function from request to response.
 The ecosystem has many decorator stacks to add new behavior to an existing <code>Service</code>.</p>
-<p>In the diagram, the client requests is coming from the top-left of the stacks and flows down to the bottom-right.
-The client and server is connected by async channel driven by Tokio runtime so there is no overhead for the serialization
-and copying because the message just &quot;moves&quot;.</p>
+<p>In the diagram, client requests are coming from the top-left of the stacks and flow down to the bottom-right.
+The client and server is connected by async channel driven by some async runtime (like Tokio) so there is no overhead for
+the serialization and copying because the messages just &quot;move&quot;.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-                            <a rel="prev" href="tarpc.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="previous-work.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                         
@@ -164,7 +164,7 @@ and copying because the message just &quot;moves&quot;.</p>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-                    <a rel="prev" href="tarpc.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="previous-work.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 

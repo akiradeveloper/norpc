@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="motivation.html"><strong aria-hidden="true">1.</strong> Motivation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="message-passsing.html" class="active"><strong aria-hidden="true">1.1.</strong> Message Passing</a></li><li class="chapter-item expanded "><a href="tarpc.html"><strong aria-hidden="true">1.2.</strong> Tarpc</a></li></ol></li><li class="chapter-item expanded "><a href="architecture.html"><strong aria-hidden="true">2.</strong> Architecture</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="compiler.html"><strong aria-hidden="true">2.1.</strong> Compiler</a></li><li class="chapter-item expanded "><a href="runtime.html"><strong aria-hidden="true">2.2.</strong> Runtime</a></li></ol></li><li class="chapter-item expanded "><a href="example.html"><strong aria-hidden="true">3.</strong> Example</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="motivation.html"><strong aria-hidden="true">1.</strong> Motivation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="message-passsing.html" class="active"><strong aria-hidden="true">1.1.</strong> Message Passing</a></li><li class="chapter-item expanded "><a href="previous-work.html"><strong aria-hidden="true">1.2.</strong> Previous Work</a></li></ol></li><li class="chapter-item expanded "><a href="architecture.html"><strong aria-hidden="true">2.</strong> Architecture</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="compiler.html"><strong aria-hidden="true">2.1.</strong> Compiler</a></li><li class="chapter-item expanded "><a href="runtime.html"><strong aria-hidden="true">2.2.</strong> Runtime</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -133,23 +133,23 @@
                 <div id="content" class="content">
                     <main>
                         <h1><a class="header" href="#message-passing" id="message-passing">Message Passing</a></h1>
-<p>To share state between async processes, these two possible solutions are to be considered</p>
+<p>To share state between async processes, these two possible solutions can be considered</p>
 <ol>
 <li>Shared memory</li>
 <li>Message passing</li>
 </ol>
 <p>The benefit of message passing is
-the processes are isolated and only communicated via defined messages.
+the processes are isolated and only communicated using defined messages.
 Each process typically holds some resources like storage or connection to external service as a sole owner
 and encapsulates the direct access to the resource from other processes.
 This makes developing async applications easy because your interest is minimized.</p>
 <p>You can also read this documentation from Tokio.
 <a href="https://tokio.rs/tokio/tutorial/channels">https://tokio.rs/tokio/tutorial/channels</a></p>
-<h2><a class="header" href="#message-passing-needs-a-lot-of-coding" id="message-passing-needs-a-lot-of-coding">Message passing needs a lot of coding</a></h2>
+<h2><a class="header" href="#problem-boilarplate" id="problem-boilarplate">Problem: Boilarplate</a></h2>
 <p>Let's design your async application by message passing.
-In this case, you have to define the message types for request and response by hand
+In this case, you have to define your own message types for request and response by hand
 and may have to write some logics that consumes messages from channel or send response to the sender
-using oneshot channel. From the Tokio documentation it would be like this</p>
+using oneshot channel. From the Tokio documentation this could be like this:</p>
 <pre><pre class="playpen"><code class="language-rust">
 <span class="boring">#![allow(unused_variables)]
 </span><span class="boring">fn main() {
@@ -194,21 +194,22 @@ type Responder&lt;T&gt; = oneshot::Sender&lt;mini_redis::Result&lt;T&gt;&gt;;
 }
 <span class="boring">}
 </span></code></pre></pre>
-<p>Do you like to write such boring codes for each service again and again?
-The answer would be no.</p>
-<h2><a class="header" href="#use-the-power-of-code-generation" id="use-the-power-of-code-generation">Use the power of code generation</a></h2>
-<p>You are happy if you can define your service in this way</p>
+<p>However, writing such codes is really tedious.</p>
+<h2><a class="header" href="#solution-code-generation" id="solution-code-generation">Solution: Code generation</a></h2>
+<p>The solution is to generate code so you can 
+focus on the logics rather than the boilarplates.</p>
+<p>With norpc, you can define your in-memory microservice
+like this and this will generate all the other tedious codes.</p>
 <pre><pre class="playpen"><code class="language-rust">
 <span class="boring">#![allow(unused_variables)]
 </span><span class="boring">fn main() {
-</span>trait YourService {
+</span>#[norpc::service]
+trait YourService {
     fn get(key: String) -&gt; Option&lt;Bytes&gt;;
     fn set(key: String, val: Bytes);
 }
 <span class="boring">}
 </span></code></pre></pre>
-<p>and rest of the codes are generated automatically.
-This is what norpc brings you.</p>
 
                     </main>
 
@@ -221,7 +222,7 @@ This is what norpc brings you.</p>
                         
 
                         
-                            <a rel="next" href="tarpc.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="previous-work.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -239,7 +240,7 @@ This is what norpc brings you.</p>
                 
 
                 
-                    <a rel="next" href="tarpc.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="previous-work.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 

@@ -83,7 +83,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="motivation.html"><strong aria-hidden="true">1.</strong> Motivation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="message-passsing.html"><strong aria-hidden="true">1.1.</strong> Message Passing</a></li><li class="chapter-item expanded "><a href="tarpc.html"><strong aria-hidden="true">1.2.</strong> Tarpc</a></li></ol></li><li class="chapter-item expanded "><a href="architecture.html"><strong aria-hidden="true">2.</strong> Architecture</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="compiler.html"><strong aria-hidden="true">2.1.</strong> Compiler</a></li><li class="chapter-item expanded "><a href="runtime.html"><strong aria-hidden="true">2.2.</strong> Runtime</a></li></ol></li><li class="chapter-item expanded "><a href="example.html"><strong aria-hidden="true">3.</strong> Example</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="motivation.html"><strong aria-hidden="true">1.</strong> Motivation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="message-passsing.html"><strong aria-hidden="true">1.1.</strong> Message Passing</a></li><li class="chapter-item expanded "><a href="previous-work.html"><strong aria-hidden="true">1.2.</strong> Previous Work</a></li></ol></li><li class="chapter-item expanded "><a href="architecture.html"><strong aria-hidden="true">2.</strong> Architecture</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="compiler.html"><strong aria-hidden="true">2.1.</strong> Compiler</a></li><li class="chapter-item expanded "><a href="runtime.html"><strong aria-hidden="true">2.2.</strong> Runtime</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -138,23 +138,23 @@
 <p>In this chapter,
 I will tell you why I started this project.</p>
 <h1><a class="header" href="#message-passing" id="message-passing">Message Passing</a></h1>
-<p>To share state between async processes, these two possible solutions are to be considered</p>
+<p>To share state between async processes, these two possible solutions can be considered</p>
 <ol>
 <li>Shared memory</li>
 <li>Message passing</li>
 </ol>
 <p>The benefit of message passing is
-the processes are isolated and only communicated via defined messages.
+the processes are isolated and only communicated using defined messages.
 Each process typically holds some resources like storage or connection to external service as a sole owner
 and encapsulates the direct access to the resource from other processes.
 This makes developing async applications easy because your interest is minimized.</p>
 <p>You can also read this documentation from Tokio.
 <a href="https://tokio.rs/tokio/tutorial/channels">https://tokio.rs/tokio/tutorial/channels</a></p>
-<h2><a class="header" href="#message-passing-needs-a-lot-of-coding" id="message-passing-needs-a-lot-of-coding">Message passing needs a lot of coding</a></h2>
+<h2><a class="header" href="#problem-boilarplate" id="problem-boilarplate">Problem: Boilarplate</a></h2>
 <p>Let's design your async application by message passing.
-In this case, you have to define the message types for request and response by hand
+In this case, you have to define your own message types for request and response by hand
 and may have to write some logics that consumes messages from channel or send response to the sender
-using oneshot channel. From the Tokio documentation it would be like this</p>
+using oneshot channel. From the Tokio documentation this could be like this:</p>
 <pre><pre class="playpen"><code class="language-rust">
 <span class="boring">#![allow(unused_variables)]
 </span><span class="boring">fn main() {
@@ -199,24 +199,25 @@ type Responder&lt;T&gt; = oneshot::Sender&lt;mini_redis::Result&lt;T&gt;&gt;;
 }
 <span class="boring">}
 </span></code></pre></pre>
-<p>Do you like to write such boring codes for each service again and again?
-The answer would be no.</p>
-<h2><a class="header" href="#use-the-power-of-code-generation" id="use-the-power-of-code-generation">Use the power of code generation</a></h2>
-<p>You are happy if you can define your service in this way</p>
+<p>However, writing such codes is really tedious.</p>
+<h2><a class="header" href="#solution-code-generation" id="solution-code-generation">Solution: Code generation</a></h2>
+<p>The solution is to generate code so you can 
+focus on the logics rather than the boilarplates.</p>
+<p>With norpc, you can define your in-memory microservice
+like this and this will generate all the other tedious codes.</p>
 <pre><pre class="playpen"><code class="language-rust">
 <span class="boring">#![allow(unused_variables)]
 </span><span class="boring">fn main() {
-</span>trait YourService {
+</span>#[norpc::service]
+trait YourService {
     fn get(key: String) -&gt; Option&lt;Bytes&gt;;
     fn set(key: String, val: Bytes);
 }
 <span class="boring">}
 </span></code></pre></pre>
-<p>and rest of the codes are generated automatically.
-This is what norpc brings you.</p>
-<h1><a class="header" href="#tarpc" id="tarpc">Tarpc</a></h1>
+<h1><a class="header" href="#previous-work" id="previous-work">Previous Work</a></h1>
 <p><a href="https://github.com/google/tarpc">Tarpc</a> is a previous work in this area.</p>
-<p>You can define your service by trait and the macro <code>tarpc::service</code> generates all the rest of the boring codes.</p>
+<p>You can define your service by trait and the macro <code>tarpc::service</code> generates all the rest of the codes.</p>
 <pre><pre class="playpen"><code class="language-rust">
 <span class="boring">#![allow(unused_variables)]
 </span><span class="boring">fn main() {
@@ -226,37 +227,39 @@ pub trait World {
 }
 <span class="boring">}
 </span></code></pre></pre>
+<h2><a class="header" href="#problems" id="problems">Problems</a></h2>
 <p>However, I found two problems in Tarpc.</p>
-<h2><a class="header" href="#tarpc-isnt-optimized-for-in-memory-channel" id="tarpc-isnt-optimized-for-in-memory-channel">Tarpc isn't optimized for in-memory channel</a></h2>
+<h3><a class="header" href="#1-tarpc-isnt-optimized-for-in-memory-channel" id="1-tarpc-isnt-optimized-for-in-memory-channel">1. Tarpc isn't optimized for in-memory channel</a></h3>
 <p>The goal of tarpc is providing RPC through TCP channel
 and the direct competitor is RPC framework like <a href="https://github.com/hyperium/tonic">Tonic</a>
 or <a href="https://github.com/paritytech/jsonrpc">jsonrpc</a>.</p>
 <p>Tarpc only allows to use in-memory channel under the same abstraction
 so the implementation isn't optimized for in-memory channel.</p>
-<h2><a class="header" href="#tarpc-doesnt-use-tower" id="tarpc-doesnt-use-tower">Tarpc doesn't use Tower</a></h2>
+<h3><a class="header" href="#2-tarpc-doesnt-use-tower" id="2-tarpc-doesnt-use-tower">2. Tarpc doesn't use Tower</a></h3>
 <p><a href="https://github.com/tower-rs/tower">Tower</a> is a framework like
 Scala's <a href="https://twitter.github.io/finagle/">Finagle</a>
-which provides a abstraction <code>Request -&gt; Response</code> and decorator stacks
-to add more functionality to the abstraction.</p>
+which provides a abstraction called <code>Service</code> which is like a function from request to response
+and decorator stacks to add more functionality on top of the abstraction.</p>
 <p>If we design a RPC framework from scratch with the current Rust ecosystem,
 we will 100% choose to depend on Tower to implement
 functionalities like rate-limiting or timeout which is essential in doing RPC.
 In fact, Tonic does so.</p>
-<p>However, Tarpc's started a long ago before the current ecosystem is established
-and it doesn't use Tower but implements those functionalities by itself to my surprise.</p>
+<p>However, Tarpc's started a long ago before the current Rust ecosystem is established
+and it doesn't use Tower but implements those functionalities by itself.</p>
 <h1><a class="header" href="#architecture" id="architecture">Architecture</a></h1>
 <p><img src="images/norpc-stack.png" alt="" /></p>
 <p>norpc utilizes Tower ecosystem.</p>
-<p>The core of the Tower ecosystem is an abstraction called <code>Service</code> which is like a function from <code>Request</code> to <code>Response</code>.
+<p>The core of the Tower ecosystem is an abstraction called <code>Service</code> which is like a function from request to response.
 The ecosystem has many decorator stacks to add new behavior to an existing <code>Service</code>.</p>
-<p>In the diagram, the client requests is coming from the top-left of the stacks and flows down to the bottom-right.
-The client and server is connected by async channel driven by Tokio runtime so there is no overhead for the serialization
-and copying because the message just &quot;moves&quot;.</p>
+<p>In the diagram, client requests are coming from the top-left of the stacks and flow down to the bottom-right.
+The client and server is connected by async channel driven by some async runtime (like Tokio) so there is no overhead for
+the serialization and copying because the messages just &quot;move&quot;.</p>
 <h1><a class="header" href="#compiler" id="compiler">Compiler</a></h1>
 <p><img src="images/norpc-stack.png" alt="" /></p>
-<p>The stacks in red is generated by the compiler which utilizes Rust's procedural macros.</p>
+<p>The stacks in red are generated by the compiler which is implemented
+by the procedural macros.</p>
 <p>You can define your service by <code>norpc::service</code> macro which generates
-code in build time.
+code in compile time.
 The generated code includes message type, client type
 and server-side <code>Service</code> type.</p>
 <pre><pre class="playpen"><code class="language-rust">
@@ -268,47 +271,10 @@ trait HelloWorld {
 }
 <span class="boring">}
 </span></code></pre></pre>
-<p>Note that these types are runtime-agnostic which means you can run this service
-in any runtime other than default Tokio runtime such as
-<a href="https://github.com/DataDog/glommio">glommio</a> or <a href="https://github.com/bytedance/monoio">monoio</a>.</p>
-<h1><a class="header" href="#runtime" id="runtime">Runtime</a></h1>
-<p><img src="images/norpc-stack.png" alt="" /></p>
-<p>The yellow and blue parts are called &quot;Runtime&quot;.</p>
-<p>As mentioned in the earlier section,
-the code generated by the compiler (in red) are runtime-agnostic.</p>
-<p>To run the service in a specific runtime, you need to write some code.</p>
-<p>Firstly, you need to implement the generated application trait.</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
-</span><span class="boring">fn main() {
-</span>struct HelloWorldApp;
-#[async_trait::async_trait]
-impl HelloWorld for HelloWorldApp {
-    async fn hello(&amp;self, s: String) -&gt; String {
-        format!(&quot;Hello, {}&quot;, s)
-    }
-}
-<span class="boring">}
-</span></code></pre></pre>
-<p>Then, build a server and a connecting channel.
-After spawning the server in a async runtime,
-you can send requests to the server through the channel.</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
-</span><span class="boring">fn main() {
-</span>use norpc::runtime::*;
-let app = HelloWorldApp;
-let builder = ServerBuilder::new(HelloWorldService::new(app));
-let (chan, server) = builder.build();
-
-tokio::spawn(server.serve(TokioExecutor));
-
-let mut cli = HelloWorldClient::new(chan);
-assert_eq!(cli.hello(&quot;World&quot;.to_owned()).await, &quot;Hello, World&quot;);
-<span class="boring">}
-</span></code></pre></pre>
-<h1><a class="header" href="#example" id="example">Example</a></h1>
-<h2><a class="header" href="#option-or-result" id="option-or-result">Option or Result</a></h2>
+<p>Note that these types are runtime-agnostic which means
+you can write your own norpc runtime to run these codes for a specific case.</p>
+<h2><a class="header" href="#more-examples" id="more-examples">More Examples</a></h2>
+<h3><a class="header" href="#option-or-result" id="option-or-result">Option or Result</a></h3>
 <p>You can return <code>Option</code> or <code>Result</code> types to
 propagate some failure back to the client.</p>
 <pre><pre class="playpen"><code class="language-rust">
@@ -321,10 +287,9 @@ trait YourService {
 }
 <span class="boring">}
 </span></code></pre></pre>
-<h2><a class="header" href="#non-send" id="non-send">Non-Send</a></h2>
+<h3><a class="header" href="#non-send" id="non-send">Non-Send</a></h3>
 <p>You can generate non-Send service by add <code>?Send</code> parameter to <code>norpc::service</code> macro.</p>
-<p>This is useful when you want to run the service in pinned thread.
-Some runtime requires non-Send type for this reason.</p>
+<p>This is useful when you want to run the service in pinned thread.</p>
 <pre><pre class="playpen"><code class="language-rust">
 <span class="boring">#![allow(unused_variables)]
 </span><span class="boring">fn main() {
@@ -333,6 +298,44 @@ trait YourService {
     // Rc&lt;T&gt; is !Send
     fn echo(s: Rc&lt;String&gt;) -&gt; Rc&lt;String&gt;;
 }
+<span class="boring">}
+</span></code></pre></pre>
+<h1><a class="header" href="#runtime" id="runtime">Runtime</a></h1>
+<p><img src="images/norpc-stack.png" alt="" /></p>
+<p>The yellow and blue parts are called &quot;norpc runtime&quot;.</p>
+<p>As mentioned in the earlier section,
+the code generated by the compiler (in red) are runtime-agnostic.</p>
+<p>To run the service on a runtime, you need to implement 
+the trait generated by the compiler.</p>
+<pre><pre class="playpen"><code class="language-rust">
+<span class="boring">#![allow(unused_variables)]
+</span><span class="boring">fn main() {
+</span>struct HelloWorldApp;
+#[async_trait::async_trait]
+impl HelloWorld for HelloWorldApp {
+    async fn hello(&amp;self, s: String) -&gt; String {
+        format!(&quot;Hello, {}&quot;, s)
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>And then you can build a server and a channel.
+After spawning the server on a async runtime,
+you can send requests to the server through the channel.
+Note that the server is async runtime agnostic so you can
+choose any async runtime to execute the server.</p>
+<pre><pre class="playpen"><code class="language-rust">
+<span class="boring">#![allow(unused_variables)]
+</span><span class="boring">fn main() {
+</span>use norpc::runtime::*;
+let app = HelloWorldApp;
+let builder = ServerBuilder::new(HelloWorldService::new(app));
+let (chan, server) = builder.build();
+
+tokio::spawn(server.serve(TokioExecutor));
+
+let mut cli = HelloWorldClient::new(chan);
+assert_eq!(cli.hello(&quot;World&quot;.to_owned()).await, &quot;Hello, World&quot;);
 <span class="boring">}
 </span></code></pre></pre>
 

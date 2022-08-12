@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Example - norpc</title>
+        <title>Previous Work - norpc</title>
         
 
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="motivation.html"><strong aria-hidden="true">1.</strong> Motivation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="message-passsing.html"><strong aria-hidden="true">1.1.</strong> Message Passing</a></li><li class="chapter-item expanded "><a href="tarpc.html"><strong aria-hidden="true">1.2.</strong> Tarpc</a></li></ol></li><li class="chapter-item expanded "><a href="architecture.html"><strong aria-hidden="true">2.</strong> Architecture</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="compiler.html"><strong aria-hidden="true">2.1.</strong> Compiler</a></li><li class="chapter-item expanded "><a href="runtime.html"><strong aria-hidden="true">2.2.</strong> Runtime</a></li></ol></li><li class="chapter-item expanded "><a href="example.html" class="active"><strong aria-hidden="true">3.</strong> Example</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="motivation.html"><strong aria-hidden="true">1.</strong> Motivation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="message-passsing.html"><strong aria-hidden="true">1.1.</strong> Message Passing</a></li><li class="chapter-item expanded "><a href="previous-work.html" class="active"><strong aria-hidden="true">1.2.</strong> Previous Work</a></li></ol></li><li class="chapter-item expanded "><a href="architecture.html"><strong aria-hidden="true">2.</strong> Architecture</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="compiler.html"><strong aria-hidden="true">2.1.</strong> Compiler</a></li><li class="chapter-item expanded "><a href="runtime.html"><strong aria-hidden="true">2.2.</strong> Runtime</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -132,45 +132,52 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#example" id="example">Example</a></h1>
-<h2><a class="header" href="#option-or-result" id="option-or-result">Option or Result</a></h2>
-<p>You can return <code>Option</code> or <code>Result</code> types to
-propagate some failure back to the client.</p>
+                        <h1><a class="header" href="#previous-work" id="previous-work">Previous Work</a></h1>
+<p><a href="https://github.com/google/tarpc">Tarpc</a> is a previous work in this area.</p>
+<p>You can define your service by trait and the macro <code>tarpc::service</code> generates all the rest of the codes.</p>
 <pre><pre class="playpen"><code class="language-rust">
 <span class="boring">#![allow(unused_variables)]
 </span><span class="boring">fn main() {
-</span>#[norpc::service]
-trait YourService {
-    fn read(id: u64) -&gt; Option&lt;Bytes&gt;;
-    fn write(id: u64, b: Bytes) -&gt; Result&lt;usize, ()&gt;;
+</span>#[tarpc::service]
+pub trait World {
+    async fn hello(name: String) -&gt; String;
 }
 <span class="boring">}
 </span></code></pre></pre>
-<h2><a class="header" href="#non-send" id="non-send">Non-Send</a></h2>
-<p>You can generate non-Send service by add <code>?Send</code> parameter to <code>norpc::service</code> macro.</p>
-<p>This is useful when you want to run the service in pinned thread.
-Some runtime requires non-Send type for this reason.</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
-</span><span class="boring">fn main() {
-</span>#[norpc::service(?Send)]
-trait YourService {
-    // Rc&lt;T&gt; is !Send
-    fn echo(s: Rc&lt;String&gt;) -&gt; Rc&lt;String&gt;;
-}
-<span class="boring">}
-</span></code></pre></pre>
+<h2><a class="header" href="#problems" id="problems">Problems</a></h2>
+<p>However, I found two problems in Tarpc.</p>
+<h3><a class="header" href="#1-tarpc-isnt-optimized-for-in-memory-channel" id="1-tarpc-isnt-optimized-for-in-memory-channel">1. Tarpc isn't optimized for in-memory channel</a></h3>
+<p>The goal of tarpc is providing RPC through TCP channel
+and the direct competitor is RPC framework like <a href="https://github.com/hyperium/tonic">Tonic</a>
+or <a href="https://github.com/paritytech/jsonrpc">jsonrpc</a>.</p>
+<p>Tarpc only allows to use in-memory channel under the same abstraction
+so the implementation isn't optimized for in-memory channel.</p>
+<h3><a class="header" href="#2-tarpc-doesnt-use-tower" id="2-tarpc-doesnt-use-tower">2. Tarpc doesn't use Tower</a></h3>
+<p><a href="https://github.com/tower-rs/tower">Tower</a> is a framework like
+Scala's <a href="https://twitter.github.io/finagle/">Finagle</a>
+which provides a abstraction called <code>Service</code> which is like a function from request to response
+and decorator stacks to add more functionality on top of the abstraction.</p>
+<p>If we design a RPC framework from scratch with the current Rust ecosystem,
+we will 100% choose to depend on Tower to implement
+functionalities like rate-limiting or timeout which is essential in doing RPC.
+In fact, Tonic does so.</p>
+<p>However, Tarpc's started a long ago before the current Rust ecosystem is established
+and it doesn't use Tower but implements those functionalities by itself.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-                            <a rel="prev" href="runtime.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="message-passsing.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                         
 
+                        
+                            <a rel="next" href="architecture.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
                         
 
                         <div style="clear: both"></div>
@@ -180,11 +187,15 @@ trait YourService {
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-                    <a rel="prev" href="runtime.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="message-passsing.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 
 
+                
+                    <a rel="next" href="architecture.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
                 
             </nav>
 
