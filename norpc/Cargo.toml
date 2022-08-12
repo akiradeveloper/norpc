@@ -22,12 +22,6 @@ anyhow = "1"
 tokio = { version = "1", features = ["sync", "rt"], optional = true }
 async-std = { version = "1", optional = true }
 
-[dev-dependencies]
-rand = "0.8"
-tokio = { version = "1", features = ["full"] }
-tower = { version = "0.4", features = ["full"] }
-tokio-test = "0.4"
-
 [features]
 runtime = []
 tokio-executor = ["tokio"]
