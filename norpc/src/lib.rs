@@ -1,3 +1,4 @@
+#![feature(type_alias_impl_trait)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 //! norpc is a library to implement in-process microservices.

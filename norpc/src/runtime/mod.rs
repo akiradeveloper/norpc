@@ -22,8 +22,6 @@ pub struct ServerBuilder<X, Svc> {
     phantom_x: PhantomData<X>,
 }
 impl<X, Svc: crate::Service<X> + 'static> ServerBuilder<X, Svc>
-where
-    X: 'static,
 {
     pub fn new(svc: Svc) -> Self {
         Self {
@@ -72,11 +70,10 @@ impl<X, Y> Drop for Channel<X, Y> {
         self.tx.unbounded_send(cancel_req).ok();
     }
 }
-impl<X: 'static, Y: 'static> crate::Service<X> for Channel<X, Y> {
+impl<X, Y> crate::Service<X> for Channel<X, Y> {
     type Response = Y;
     type Error = anyhow::Error;
-    type Future =
-        std::pin::Pin<Box<dyn std::future::Future<Output = Result<Y, Self::Error>>>>;
+    type Future = impl std::future::Future<Output = Result<Y, Self::Error>>;
 
     fn poll_ready(
         &mut self,
@@ -108,9 +105,7 @@ pub struct Server<X, Svc: crate::Service<X>> {
     service: Svc,
     rx: mpsc::UnboundedReceiver<CoreRequest<X, Svc::Response>>,
 }
-impl<X, Svc: crate::Service<X> + 'static> Server<X, Svc>
-where
-    X: 'static,
+impl<X, Svc: crate::Service<X>> Server<X, Svc>
 {
     fn new(rx: mpsc::UnboundedReceiver<CoreRequest<X, Svc::Response>>, service: Svc) -> Self {
         Self { service, rx: rx }
@@ -144,9 +139,9 @@ where
                     let fut = async move {
                         fut.await.ok();
                     };
-                    // if let Err(e) = executor.spawn(fut) {
-                    //     abort_handle.abort();
-                    // }
+                    if let Err(e) = executor.spawn(fut) {
+                        abort_handle.abort();
+                    }
                     processings.insert(stream_id, abort_handle);
                 }
                 CoreRequest::Cancel { stream_id } => {
