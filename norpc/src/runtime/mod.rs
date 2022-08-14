@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
 use futures::channel::{mpsc, oneshot};
+use futures::stream::AbortHandle;
 use futures::StreamExt;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -21,8 +22,7 @@ pub struct ServerBuilder<X, Svc> {
     svc: Svc,
     phantom_x: PhantomData<X>,
 }
-impl<X, Svc: crate::Service<X> + 'static> ServerBuilder<X, Svc>
-{
+impl<X, Svc: crate::Service<X> + 'static> ServerBuilder<X, Svc> {
     pub fn new(svc: Svc) -> Self {
         Self {
             svc: svc,
@@ -105,12 +105,11 @@ pub struct Server<X, Svc: crate::Service<X>> {
     service: Svc,
     rx: mpsc::UnboundedReceiver<CoreRequest<X, Svc::Response>>,
 }
-impl<X, Svc: crate::Service<X>> Server<X, Svc>
-{
+impl<X, Svc: crate::Service<X>> Server<X, Svc> {
     fn new(rx: mpsc::UnboundedReceiver<CoreRequest<X, Svc::Response>>, service: Svc) -> Self {
         Self { service, rx: rx }
     }
-    pub async fn serve(mut self, executor: impl futures::task::Spawn) {
+    pub async fn serve(mut self, executor: impl Exec<X, Svc>) {
         use futures::future::AbortHandle;
         use futures::task::SpawnExt;
         let mut processings: HashMap<u64, AbortHandle> = HashMap::new();
@@ -130,19 +129,21 @@ impl<X, Svc: crate::Service<X>> Server<X, Svc>
                     crate::poll_fn(|ctx| self.service.poll_ready(ctx))
                         .await
                         .ok();
-                    let fut = self.service.call(inner);
-                    let (fut, abort_handle) = futures::future::abortable(async move {
-                        if let Ok(rep) = fut.await {
-                            tx.send(rep).ok();
-                        }
-                    });
-                    let fut = async move {
-                        fut.await.ok();
-                    };
-                    if let Err(e) = executor.spawn(fut) {
-                        abort_handle.abort();
+                    // let fut = self.service.call(inner);
+                    // let (fut, abort_handle) = futures::future::abortable(async move {
+                    //     if let Ok(rep) = fut.await {
+                    //         tx.send(rep).ok();
+                    //     }
+                    // });
+                    // let fut = async move {
+                    //     fut.await.ok();
+                    // };
+                    // if let Err(e) = executor.spawn(fut) {
+                    //     abort_handle.abort();
+                    // }
+                    if let Some(abort_handle) = executor.run(inner, tx).await {
+                        processings.insert(stream_id, abort_handle);
                     }
-                    processings.insert(stream_id, abort_handle);
                 }
                 CoreRequest::Cancel { stream_id } => {
                     if let Some(handle) = processings.get(&stream_id) {
@@ -155,19 +156,39 @@ impl<X, Svc: crate::Service<X>> Server<X, Svc>
     }
 }
 
+pub trait Exec<X, Svc: tower_service::Service<X>> {
+    fn run(svc: Svc, x: X, tx1: oneshot::Sender<Svc::Response>) -> Option<AbortHandle>;
+}
+
 #[cfg(feature = "tokio-executor")]
 #[cfg_attr(docsrs, doc(cfg(feature = "tokio-executor")))]
 /// Tokio support.
 pub struct TokioExecutor;
 
+// #[cfg(feature = "tokio-executor")]
+// impl futures::task::Spawn for TokioExecutor {
+//     fn spawn_obj(
+//         &self,
+//         future: futures::task::FutureObj<'static, ()>,
+//     ) -> Result<(), futures::task::SpawnError> {
+//         tokio::spawn(future);
+//         Ok(())
+//     }
+// }
 #[cfg(feature = "tokio-executor")]
-impl futures::task::Spawn for TokioExecutor {
-    fn spawn_obj(
-        &self,
-        future: futures::task::FutureObj<'static, ()>,
-    ) -> Result<(), futures::task::SpawnError> {
-        tokio::spawn(future);
-        Ok(())
+impl<X, Svc: tower_service::Service<X>> Exec<X, Svc> for TokioExecutor {
+    fn run(svc: Svc, x: X, tx1: oneshot::Sender<Svc::Response>) -> Option<AbortHandle> {
+        let fut = svc.call(x);
+        let (fut, abort_handle) = futures::future::abortable(async move {
+            if let Ok(rep) = fut.await {
+                tx1.send(rep).ok();
+            }
+        });
+        let fut = async move {
+            fut.await.ok();
+        };
+        tokio::spawn(fut);
+        Some(abort_handle)
     }
 }
 
