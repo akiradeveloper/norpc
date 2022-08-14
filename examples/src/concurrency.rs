@@ -31,11 +31,12 @@ impl IdAllocApp {
 #[norpc::async_trait]
 impl IdAlloc for IdAllocApp {
     async fn alloc(&self, name: u64) -> u64 {
-        let sleep_time = rand::random::<u64>() % 100;
-        tokio::time::sleep(std::time::Duration::from_millis(sleep_time)).await;
+        // let sleep_time = rand::random::<u64>() % 100;
+        // tokio::time::sleep(std::time::Duration::from_millis(sleep_time)).await;
         let id = self.n.fetch_add(1, Ordering::SeqCst);
         self.id_store_cli.clone().save(name, id).await;
-        name
+        // name
+        0
     }
 }
 
