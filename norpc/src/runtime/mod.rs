@@ -75,11 +75,10 @@ impl<X, Y, Inner: Clone> Clone for Channel<X, Y, Inner> {
         }
     }
 }
-impl<X: 'static + Send, Y: 'static + Send, Inner: Service<X, Error = anyhow::Error>> Service<X> for Channel<X, Y, Inner> {
+impl<X: 'static + Send, Y: 'static + Send, Inner: Service<X>> Service<X> for Channel<X, Y, Inner> {
     type Response = Y;
-    type Error = anyhow::Error;
-    type Future =
-        std::pin::Pin<Box<dyn std::future::Future<Output = Result<Y, Self::Error>> + Send>>;
+    type Error = Inner::Error;
+    type Future = Inner::Future;
 
     fn poll_ready(
         &mut self,
