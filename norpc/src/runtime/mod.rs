@@ -51,15 +51,18 @@ pub struct Channel<X, Y> {
     inner: BoxCloneService<X, Y, anyhow::Error>,
 }
 impl<X, Y> Channel<X, Y> {
-    pub fn add_layer(
-        self,
-        layer: impl Layer<
-            BoxCloneService<X, Y, anyhow::Error>,
-            Service = BoxCloneService<X, Y, anyhow::Error>,
-        >,
-    ) -> Self {
-        let new_inner = layer.layer(self.inner);
-        Self { inner: new_inner }
+    pub fn new<S: Service<X, Response = Y, Error = anyhow::Error> + 'static + Send + Clone>(
+        inner: S,
+    ) -> Self
+    where
+        S::Future: 'static + Send,
+    {
+        Self {
+            inner: BoxCloneService::new(inner),
+        }
+    }
+    pub fn unwrap(self) -> impl Service<X> {
+        self.inner
     }
 }
 

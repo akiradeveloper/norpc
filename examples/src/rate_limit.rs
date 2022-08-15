@@ -27,14 +27,12 @@ async fn test_rate_limit() {
     let builder = ServerBuilder::new(service);
     let (chan, server) = builder.build();
     ::tokio::spawn(server.serve(TokioExecutor));
-    let chan = ServiceBuilder::new()
+    let inner = ServiceBuilder::new()
         .buffer(1)
         .rate_limit(1000, std::time::Duration::from_secs(1))
-        .service(chan);
-    let chan = BoxCloneService::new(chan);
+        .service(chan.unwrap());
     // This move means nothing but to check if holding the boxed service in struct works.
-    let holder = ServiceHolder { chan };
-    let cli = RateLimitClient::new(holder.chan);
+    let cli = RateLimitClient::new(chan);
     for _ in 0..N {
         // This can be commented out but to make sure thet the client is cloneable.
         let mut cli = cli.clone();
