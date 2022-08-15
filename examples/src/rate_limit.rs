@@ -1,5 +1,5 @@
 use tower::util::BoxCloneService;
-use tower::ServiceBuilder;
+use tower::{Layer, ServiceBuilder};
 
 const N: usize = 10000;
 

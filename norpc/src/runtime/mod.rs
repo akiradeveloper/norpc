@@ -6,8 +6,8 @@ use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use tower::util::BoxCloneService;
-
-use tower_service::Service;
+use tower::Layer;
+use tower::Service;
 
 enum CoreRequest<X, Y> {
     AppRequest {
@@ -50,6 +50,19 @@ where
 pub struct Channel<X, Y> {
     inner: BoxCloneService<X, Y, anyhow::Error>,
 }
+impl<X, Y> Channel<X, Y> {
+    pub fn add_layer(
+        self,
+        layer: impl Layer<
+            BoxCloneService<X, Y, anyhow::Error>,
+            Service = BoxCloneService<X, Y, anyhow::Error>,
+        >,
+    ) -> Self {
+        let new_inner = layer.layer(self.inner);
+        Self { inner: new_inner }
+    }
+}
+
 unsafe impl<X, Y> Sync for Channel<X, Y> {}
 impl<X, Y> Clone for Channel<X, Y> {
     fn clone(&self) -> Self {
