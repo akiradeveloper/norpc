@@ -5,6 +5,9 @@ use futures::StreamExt;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use tower::util::BoxCloneService;
+
+use tower_service::Service;
 
 enum CoreRequest<X, Y> {
     AppRequest {
@@ -36,17 +39,49 @@ where
     pub fn build(self) -> (Channel<X, Svc::Response>, Server<X, Svc>) {
         let (tx, rx) = mpsc::unbounded();
         let server = Server::new(rx, self.svc);
-        let chan = Channel::new(tx);
+        let inner = InnerChannel::new(tx);
+        let chan = Channel {
+            inner: BoxCloneService::new(inner),
+        };
         (chan, server)
     }
 }
 
 pub struct Channel<X, Y> {
+    inner: BoxCloneService<X, Y, anyhow::Error>,
+}
+unsafe impl<X, Y> Sync for Channel<X, Y> {}
+impl<X, Y> Clone for Channel<X, Y> {
+    fn clone(&self) -> Self {
+        Self {
+            inner: self.inner.clone(),
+        }
+    }
+}
+impl<X: 'static + Send, Y: 'static + Send> Service<X> for Channel<X, Y> {
+    type Response = Y;
+    type Error = anyhow::Error;
+    type Future =
+        std::pin::Pin<Box<dyn std::future::Future<Output = Result<Y, Self::Error>> + Send>>;
+
+    fn poll_ready(
+        &mut self,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Result<(), Self::Error>> {
+        self.inner.poll_ready(cx)
+    }
+
+    fn call(&mut self, req: X) -> Self::Future {
+        self.inner.call(req)
+    }
+}
+
+pub struct InnerChannel<X, Y> {
     next_id: Arc<AtomicU64>,
     stream_id: u64,
     tx: mpsc::UnboundedSender<CoreRequest<X, Y>>,
 }
-impl<X, Y> Channel<X, Y> {
+impl<X, Y> InnerChannel<X, Y> {
     fn new(tx: mpsc::UnboundedSender<CoreRequest<X, Y>>) -> Self {
         Self {
             stream_id: 0,
@@ -55,7 +90,7 @@ impl<X, Y> Channel<X, Y> {
         }
     }
 }
-impl<X, Y> Clone for Channel<X, Y> {
+impl<X, Y> Clone for InnerChannel<X, Y> {
     fn clone(&self) -> Self {
         let next_id = self.next_id.clone();
         let stream_id = next_id.fetch_add(1, Ordering::SeqCst);
@@ -66,7 +101,7 @@ impl<X, Y> Clone for Channel<X, Y> {
         }
     }
 }
-impl<X, Y> Drop for Channel<X, Y> {
+impl<X, Y> Drop for InnerChannel<X, Y> {
     fn drop(&mut self) {
         let cancel_req = CoreRequest::Cancel {
             stream_id: self.stream_id,
@@ -74,7 +109,7 @@ impl<X, Y> Drop for Channel<X, Y> {
         self.tx.unbounded_send(cancel_req).ok();
     }
 }
-impl<X: 'static + Send, Y: 'static + Send> crate::Service<X> for Channel<X, Y> {
+impl<X: 'static + Send, Y: 'static + Send> crate::Service<X> for InnerChannel<X, Y> {
     type Response = Y;
     type Error = anyhow::Error;
     type Future =
