@@ -31,6 +31,7 @@ async fn test_rate_limit() {
         .buffer(1)
         .rate_limit(1000, std::time::Duration::from_secs(1))
         .service(chan.unwrap());
+    let chan = Channel::new(inner);
     // This move means nothing but to check if holding the boxed service in struct works.
     let cli = RateLimitClient::new(chan);
     for _ in 0..N {

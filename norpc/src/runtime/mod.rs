@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use tower::util::BoxCloneService;
-use tower::Layer;
+use tower::{Layer, BoxError};
 use tower::Service;
 
 enum CoreRequest<X, Y> {
@@ -36,29 +36,28 @@ where
             phantom_x: PhantomData,
         }
     }
-    pub fn build(self) -> (Channel<X, Svc::Response>, Server<X, Svc>) {
+    pub fn build(self) -> (Channel<X, Svc::Response, InnerChannel<X, Svc::Response>>, Server<X, Svc>) {
         let (tx, rx) = mpsc::unbounded();
         let server = Server::new(rx, self.svc);
         let inner = InnerChannel::new(tx);
-        let chan = Channel {
-            inner: BoxCloneService::new(inner),
-        };
+        let chan = Channel::new(inner);
         (chan, server)
     }
 }
 
-pub struct Channel<X, Y> {
-    inner: BoxCloneService<X, Y, anyhow::Error>,
+pub struct Channel<X, Y, Inner> {
+    inner: Inner,
+    phan_x: PhantomData<X>,
+    phan_y: PhantomData<Y>,
 }
-impl<X, Y> Channel<X, Y> {
-    pub fn new<S: Service<X, Response = Y, Error = anyhow::Error> + 'static + Send + Clone>(
-        inner: S,
-    ) -> Self
-    where
-        S::Future: 'static + Send,
-    {
+impl<X, Y, Inner: Service<X>> Channel<X, Y, Inner> {
+    pub fn new(
+        inner: Inner,
+    ) -> Self {
         Self {
-            inner: BoxCloneService::new(inner),
+            inner,
+            phan_x: PhantomData,
+            phan_y: PhantomData,
         }
     }
     pub fn unwrap(self) -> impl Service<X> {
@@ -66,15 +65,17 @@ impl<X, Y> Channel<X, Y> {
     }
 }
 
-unsafe impl<X, Y> Sync for Channel<X, Y> {}
-impl<X, Y> Clone for Channel<X, Y> {
+unsafe impl<X, Y, Inner> Sync for Channel<X, Y, Inner> {}
+impl<X, Y, Inner: Clone> Clone for Channel<X, Y, Inner> {
     fn clone(&self) -> Self {
         Self {
             inner: self.inner.clone(),
+            phan_x: PhantomData,
+            phan_y: PhantomData,
         }
     }
 }
-impl<X: 'static + Send, Y: 'static + Send> Service<X> for Channel<X, Y> {
+impl<X: 'static + Send, Y: 'static + Send, Inner: Service<X, Error = anyhow::Error>> Service<X> for Channel<X, Y, Inner> {
     type Response = Y;
     type Error = anyhow::Error;
     type Future =
@@ -88,7 +89,7 @@ impl<X: 'static + Send, Y: 'static + Send> Service<X> for Channel<X, Y> {
     }
 
     fn call(&mut self, req: X) -> Self::Future {
-        self.inner.call(req)
+        Box::pin(self.inner.call(req))
     }
 }
 
