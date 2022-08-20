@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use futures::channel::{mpsc, oneshot};
+use futures::channel::oneshot;
 use futures::StreamExt;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -34,7 +34,7 @@ where
         }
     }
     pub fn build(self) -> (Channel<X, Svc::Response>, Server<X, Svc>) {
-        let (tx, rx) = mpsc::unbounded();
+        let (tx, rx) = flume::unbounded();
         let server = Server::new(rx, self.svc);
         let chan = Channel::new(tx);
         (chan, server)
@@ -44,10 +44,10 @@ where
 pub struct Channel<X, Y> {
     next_id: Arc<AtomicU64>,
     stream_id: u64,
-    tx: mpsc::UnboundedSender<CoreRequest<X, Y>>,
+    tx: flume::Sender<CoreRequest<X, Y>>,
 }
 impl<X, Y> Channel<X, Y> {
-    fn new(tx: mpsc::UnboundedSender<CoreRequest<X, Y>>) -> Self {
+    fn new(tx: flume::Sender<CoreRequest<X, Y>>) -> Self {
         Self {
             stream_id: 0,
             next_id: Arc::new(AtomicU64::new(1)),
@@ -71,7 +71,7 @@ impl<X, Y> Drop for Channel<X, Y> {
         let cancel_req = CoreRequest::Cancel {
             stream_id: self.stream_id,
         };
-        self.tx.unbounded_send(cancel_req).ok();
+        self.tx.send(cancel_req).ok();
     }
 }
 impl<X: 'static + Send, Y: 'static + Send> crate::Service<X> for Channel<X, Y> {
@@ -97,7 +97,7 @@ impl<X: 'static + Send, Y: 'static + Send> crate::Service<X> for Channel<X, Y> {
                 tx: tx1,
                 stream_id,
             };
-            if tx.unbounded_send(req).is_err() {
+            if tx.send(req).is_err() {
                 anyhow::bail!("failed to send a request");
             }
             let rep = rx1.await?;
@@ -108,7 +108,7 @@ impl<X: 'static + Send, Y: 'static + Send> crate::Service<X> for Channel<X, Y> {
 
 pub struct Server<X, Svc: crate::Service<X>> {
     service: Svc,
-    rx: mpsc::UnboundedReceiver<CoreRequest<X, Svc::Response>>,
+    rx: flume::Receiver<CoreRequest<X, Svc::Response>>,
 }
 impl<X, Svc: crate::Service<X> + 'static + Send> Server<X, Svc>
 where
@@ -116,14 +116,15 @@ where
     Svc::Future: Send,
     Svc::Response: Send,
 {
-    fn new(rx: mpsc::UnboundedReceiver<CoreRequest<X, Svc::Response>>, service: Svc) -> Self {
+    fn new(rx: flume::Receiver<CoreRequest<X, Svc::Response>>, service: Svc) -> Self {
         Self { service, rx: rx }
     }
     pub async fn serve(mut self, executor: impl futures::task::Spawn) {
         use futures::future::AbortHandle;
         use futures::task::SpawnExt;
         let mut processings: HashMap<u64, AbortHandle> = HashMap::new();
-        while let Some(req) = self.rx.next().await {
+        let mut req_stream = self.rx.into_stream();
+        while let Some(req) = req_stream.next().await {
             match req {
                 CoreRequest::AppRequest {
                     inner,
