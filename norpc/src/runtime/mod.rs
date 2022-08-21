@@ -97,7 +97,7 @@ impl<X: 'static + Send, Y: 'static + Send> crate::Service<X> for Channel<X, Y> {
                 tx: tx1,
                 stream_id,
             };
-            if tx.send(req).is_err() {
+            if tx.send_async(req).await.is_err() {
                 anyhow::bail!("failed to send a request");
             }
             let rep = rx1.await?;
