@@ -136,10 +136,12 @@ where
                     }
                     processings.remove(&stream_id);
 
-                    // backpressure
+                    // back-pressure
+                    // A call of `poll_fn` here is required because some tower wrapper requires to do so.
                     crate::poll_fn(|ctx| self.service.poll_ready(ctx))
                         .await
                         .ok();
+
                     let fut = self.service.call(inner);
                     let (fut, abort_handle) = futures::future::abortable(async move {
                         if let Ok(rep) = fut.await {
