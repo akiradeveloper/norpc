@@ -8,6 +8,8 @@ edition = "2021"
 [dependencies]
 tokio = { version = "*", features = ["full"] }
 tower = { version = "*", features = ["full"] }
+flume = "*"
+futures = "*"
 
 norpc = { path = "../../norpc", features = ["runtime", "tokio-executor"] }
 

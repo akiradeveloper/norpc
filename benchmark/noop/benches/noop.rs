@@ -1,6 +1,3 @@
-use norpc::runtime::ServerBuilder;
-use tokio::sync::mpsc;
-
 #[norpc::service]
 trait Noop {
     fn noop();
@@ -37,12 +34,14 @@ fn bench_noop(c: &mut Criterion) {
 }
 
 fn bench_channel(c: &mut Criterion) {
+    use futures::stream::StreamExt;
     let rt = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
         .unwrap();
-    let (tx, mut rx) = mpsc::unbounded_channel();
-    rt.spawn(async move { while let Some(()) = rx.recv().await {} });
+    let (tx, rx) = flume::unbounded();
+    let mut st = rx.into_stream();
+    rt.spawn(async move { while let Some(()) = st.next().await {} });
     c.bench_function("noop channel", |b| {
         b.to_async(&rt).iter(|| async {
             tx.send(()).unwrap();
