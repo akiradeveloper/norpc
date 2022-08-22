@@ -59,7 +59,7 @@ To compare the pure overhead, he benchmark program launches
 a no-op server and send requests from the client.
 
 ```
-noop request/1          time:   [8.9181 us 8.9571 us 9.0167 us]
+noop request (norpc)/1  time:   [8.9181 us 8.9571 us 9.0167 us]
 noop request (tarpc)/1  time:   [15.476 us 15.514 us 15.554 us]
 ```
 
