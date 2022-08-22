@@ -25,7 +25,7 @@ fn bench_noop(c: &mut Criterion) {
     rt.spawn(server.serve(TokioExecutor));
 
     let cli = NoopClient::new(chan);
-    c.bench_with_input(BenchmarkId::new("noop request", 1), &cli, |b, cli| {
+    c.bench_with_input(BenchmarkId::new("noop request (norpc)", 1), &cli, |b, cli| {
         b.to_async(&rt).iter(|| async {
             let mut cli = cli.clone();
             cli.noop().await;
